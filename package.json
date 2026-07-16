@@ -1,0 +1,61 @@
+{
+  "name": "@benmcosker/design-system-generator",
+  "version": "0.0.0-development",
+  "description": "AI-assisted, accessibility-first design-system generator: design tokens in, React + TypeScript component library out — with axe-core tests, Storybook docs, and Claude-written usage guides.",
+  "keywords": [
+    "design-system",
+    "design-tokens",
+    "accessibility",
+    "a11y",
+    "axe-core",
+    "react",
+    "typescript",
+    "storybook",
+    "code-generation",
+    "claude"
+  ],
+  "license": "MIT",
+  "author": "Ben McCosker",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/benmcosker/design-system-generator.git"
+  },
+  "type": "module",
+  "bin": {
+    "dsg": "./dist/cli.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "dev": "tsx src/cli.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.111.0",
+    "commander": "^13.1.0",
+    "yaml": "^2.7.0",
+    "zod": "^3.24.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.5"
+  }
+}

@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    name: Typecheck, unit tests, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+
+  generated-a11y:
+    name: Generated components pass axe-core
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Generate design system from example tokens
+        run: node dist/cli.js generate example/tokens.yaml -o generated-ds
+      - name: Install generated package
+        working-directory: generated-ds
+        run: npm install --no-audit --no-fund
+      - name: Run axe-core accessibility tests on generated components
+        working-directory: generated-ds
+        run: npm test
+      - name: Upload generated design system
+        uses: actions/upload-artifact@v4
+        with:
+          name: generated-design-system
+          path: |
+            generated-ds
+            !generated-ds/node_modules

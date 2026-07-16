@@ -1,0 +1,30 @@
+# Example design-token spec for design-system-generator.
+# Every color pair used by generated components is checked against
+# WCAG AA contrast before anything is emitted.
+name: acme
+
+colors:
+  primary: "#1d4ed8"     # blue-700
+  background: "#ffffff"
+  surface: "#f8fafc"
+  text: "#0f172a"        # slate-900
+  textMuted: "#475569"   # slate-600
+  danger: "#b91c1c"      # red-700
+  success: "#15803d"     # green-700
+  warning: "#b45309"     # amber-700
+
+typography:
+  fontFamily: "'Inter', system-ui, sans-serif"
+  baseSizePx: 16
+  scale: 1.25
+
+spacing:
+  unitPx: 4
+
+radius:
+  sm: 4px
+  md: 8px
+  lg: 16px
+
+focus:
+  ringWidthPx: 3
