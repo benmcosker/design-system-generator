@@ -319,6 +319,409 @@ export const Danger: Story = {
   return { name: 'Alert', component, story, test };
 }
 
+export function checkboxTemplate(): ComponentFiles {
+  const component = `${HEADER}import * as React from 'react';
+import '../styles.css';
+
+export interface CheckboxProps
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type' | 'id'> {
+  /** Visible label — always rendered and programmatically associated. */
+  label: string;
+  /** Optional helper text, linked via aria-describedby. */
+  description?: string;
+}
+
+export function Checkbox({ label, description, className, ...rest }: CheckboxProps) {
+  const id = React.useId();
+  const descriptionId = id + '-description';
+
+  return (
+    <div className={['ds-checkbox', className].filter(Boolean).join(' ')}>
+      <input
+        id={id}
+        type="checkbox"
+        className="ds-checkbox__input"
+        aria-describedby={description ? descriptionId : undefined}
+        {...rest}
+      />
+      <label className="ds-checkbox__label" htmlFor={id}>
+        {label}
+      </label>
+      {description ? (
+        <p className="ds-checkbox__description" id={descriptionId}>
+          {description}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+`;
+
+  const story = `${HEADER}import type { Meta, StoryObj } from '@storybook/react';
+import { Checkbox } from './Checkbox';
+
+const meta = {
+  title: 'Components/Checkbox',
+  component: Checkbox,
+  tags: ['autodocs'],
+  args: { label: 'Email me about product updates' },
+} satisfies Meta<typeof Checkbox>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
+export const Checked: Story = { args: { defaultChecked: true } };
+export const WithDescription: Story = {
+  args: { description: 'About once a month. Unsubscribe anytime.' },
+};
+export const Disabled: Story = { args: { disabled: true } };
+`;
+
+  const test = axeTest(
+    'Checkbox',
+    `  it('has no axe violations across states', async () => {
+    const { container } = render(
+      <main>
+        <Checkbox label="Default" />
+        <Checkbox label="Checked" defaultChecked />
+        <Checkbox label="Described" description="Extra context for this option." />
+        <Checkbox label="Disabled" disabled />
+      </main>,
+    );
+    await expectNoAxeViolations(container);
+  });
+`,
+  );
+
+  return { name: 'Checkbox', component, story, test };
+}
+
+export function switchTemplate(): ComponentFiles {
+  const component = `${HEADER}import * as React from 'react';
+import '../styles.css';
+
+export interface SwitchProps
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type' | 'id' | 'role'> {
+  /** Visible label — always rendered and programmatically associated. */
+  label: string;
+  /** Optional helper text, linked via aria-describedby. */
+  description?: string;
+}
+
+/**
+ * A native checkbox with role="switch" — screen readers announce it as a
+ * toggle, and it keeps the keyboard and state handling of a real form
+ * control instead of a hand-rolled div with custom key bindings.
+ */
+export function Switch({ label, description, className, ...rest }: SwitchProps) {
+  const id = React.useId();
+  const descriptionId = id + '-description';
+
+  return (
+    <div className={['ds-switch', className].filter(Boolean).join(' ')}>
+      <input
+        id={id}
+        type="checkbox"
+        role="switch"
+        className="ds-switch__input"
+        aria-describedby={description ? descriptionId : undefined}
+        {...rest}
+      />
+      <label className="ds-switch__label" htmlFor={id}>
+        {label}
+      </label>
+      {description ? (
+        <p className="ds-switch__description" id={descriptionId}>
+          {description}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+`;
+
+  const story = `${HEADER}import type { Meta, StoryObj } from '@storybook/react';
+import { Switch } from './Switch';
+
+const meta = {
+  title: 'Components/Switch',
+  component: Switch,
+  tags: ['autodocs'],
+  args: { label: 'Enable two-factor authentication' },
+} satisfies Meta<typeof Switch>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
+export const On: Story = { args: { defaultChecked: true } };
+export const WithDescription: Story = {
+  args: { description: "You'll need an authenticator app to sign in." },
+};
+export const Disabled: Story = { args: { disabled: true } };
+`;
+
+  const test = axeTest(
+    'Switch',
+    `  it('has no axe violations across states', async () => {
+    const { container } = render(
+      <main>
+        <Switch label="Default" />
+        <Switch label="On" defaultChecked />
+        <Switch label="Described" description="Extra context for this option." />
+        <Switch label="Disabled" disabled />
+      </main>,
+    );
+    await expectNoAxeViolations(container);
+  });
+`,
+  );
+
+  return { name: 'Switch', component, story, test };
+}
+
+export function radioGroupTemplate(): ComponentFiles {
+  const component = `${HEADER}import * as React from 'react';
+import '../styles.css';
+
+export interface RadioOption {
+  value: string;
+  label: string;
+}
+
+export interface RadioGroupProps
+  extends Omit<React.FieldsetHTMLAttributes<HTMLFieldSetElement>, 'onChange'> {
+  /** Rendered as the fieldset's <legend> — announced once for the whole group. */
+  legend: string;
+  name: string;
+  options: RadioOption[];
+  value?: string;
+  defaultValue?: string;
+  onChange?: (value: string) => void;
+  required?: boolean;
+}
+
+/**
+ * A native <fieldset>/<legend> group of radio inputs. Arrow-key navigation
+ * between options is handled by the browser for free because they're real
+ * radio inputs sharing one \`name\` — no roving-tabindex code needed.
+ */
+export function RadioGroup({
+  legend,
+  name,
+  options,
+  value,
+  defaultValue,
+  onChange,
+  disabled,
+  required,
+  className,
+  ...rest
+}: RadioGroupProps) {
+  return (
+    <fieldset className={['ds-radio-group', className].filter(Boolean).join(' ')} {...rest}>
+      <legend className="ds-radio-group__legend">
+        {legend}
+        {required ? <span aria-hidden="true"> *</span> : null}
+      </legend>
+      {options.map((option) => (
+        <label key={option.value} className="ds-radio-group__option">
+          <input
+            type="radio"
+            className="ds-radio-group__input"
+            name={name}
+            value={option.value}
+            checked={value !== undefined ? value === option.value : undefined}
+            defaultChecked={
+              value === undefined && defaultValue !== undefined
+                ? defaultValue === option.value
+                : undefined
+            }
+            disabled={disabled}
+            required={required}
+            onChange={onChange ? () => onChange(option.value) : undefined}
+          />
+          {option.label}
+        </label>
+      ))}
+    </fieldset>
+  );
+}
+`;
+
+  const story = `${HEADER}import type { Meta, StoryObj } from '@storybook/react';
+import { RadioGroup } from './RadioGroup';
+
+const plans = [
+  { value: 'free', label: 'Free' },
+  { value: 'pro', label: 'Pro' },
+  { value: 'team', label: 'Team' },
+];
+
+const meta = {
+  title: 'Components/RadioGroup',
+  component: RadioGroup,
+  tags: ['autodocs'],
+  args: { legend: 'Plan', name: 'plan', options: plans },
+} satisfies Meta<typeof RadioGroup>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
+export const WithDefault: Story = { args: { defaultValue: 'pro' } };
+export const Required: Story = { args: { required: true } };
+export const Disabled: Story = { args: { disabled: true, defaultValue: 'free' } };
+`;
+
+  const test = axeTest(
+    'RadioGroup',
+    `  const plans = [
+    { value: 'free', label: 'Free' },
+    { value: 'pro', label: 'Pro' },
+    { value: 'team', label: 'Team' },
+  ];
+
+  it('has no axe violations across states', async () => {
+    const { container } = render(
+      <main>
+        <RadioGroup legend="Plan" name="plan-default" options={plans} />
+        <RadioGroup legend="Plan (preselected)" name="plan-preselected" options={plans} defaultValue="pro" />
+        <RadioGroup legend="Plan (required)" name="plan-required" options={plans} required />
+        <RadioGroup legend="Plan (disabled)" name="plan-disabled" options={plans} disabled defaultValue="free" />
+      </main>,
+    );
+    await expectNoAxeViolations(container);
+  });
+`,
+  );
+
+  return { name: 'RadioGroup', component, story, test };
+}
+
+export function selectTemplate(): ComponentFiles {
+  const component = `${HEADER}import * as React from 'react';
+import '../styles.css';
+
+export interface SelectOption {
+  value: string;
+  label: string;
+}
+
+export interface SelectProps
+  extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'id' | 'aria-describedby'> {
+  /** Visible label — always rendered and programmatically associated. */
+  label: string;
+  options: SelectOption[];
+  /** Optional helper text, linked via aria-describedby. */
+  description?: string;
+  /** Validation message. Sets aria-invalid and is announced politely. */
+  error?: string;
+}
+
+/** A native <select> — full keyboard support and platform picker UI for free. */
+export function Select({ label, options, description, error, required, ...rest }: SelectProps) {
+  const id = React.useId();
+  const descriptionId = id + '-description';
+  const errorId = id + '-error';
+  const describedBy =
+    [description ? descriptionId : null, error ? errorId : null].filter(Boolean).join(' ') ||
+    undefined;
+
+  return (
+    <div className="ds-field">
+      <label className="ds-field__label" htmlFor={id}>
+        {label}
+        {required ? <span aria-hidden="true"> *</span> : null}
+      </label>
+      {description ? (
+        <p className="ds-field__description" id={descriptionId}>
+          {description}
+        </p>
+      ) : null}
+      <select
+        id={id}
+        className="ds-select"
+        aria-describedby={describedBy}
+        aria-invalid={error ? true : undefined}
+        required={required}
+        {...rest}
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <p className="ds-field__error" id={errorId} aria-live="polite">
+        {error ?? ''}
+      </p>
+    </div>
+  );
+}
+`;
+
+  const story = `${HEADER}import type { Meta, StoryObj } from '@storybook/react';
+import { Select } from './Select';
+
+const countries = [
+  { value: 'us', label: 'United States' },
+  { value: 'gb', label: 'United Kingdom' },
+  { value: 'de', label: 'Germany' },
+];
+
+const meta = {
+  title: 'Components/Select',
+  component: Select,
+  tags: ['autodocs'],
+  args: { label: 'Country', options: countries },
+} satisfies Meta<typeof Select>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
+export const WithDescription: Story = {
+  args: { description: 'Used to calculate shipping and tax.' },
+};
+export const Required: Story = { args: { required: true } };
+export const WithError: Story = { args: { error: 'Select a country to continue.' } };
+`;
+
+  const test = axeTest(
+    'Select',
+    `  const countries = [
+    { value: 'us', label: 'United States' },
+    { value: 'gb', label: 'United Kingdom' },
+    { value: 'de', label: 'Germany' },
+  ];
+
+  it('has no axe violations in default, described, and error states', async () => {
+    const { container } = render(
+      <main>
+        <Select label="Country" options={countries} />
+        <Select label="Region" options={countries} description="Used for shipping." required />
+        <Select label="Currency" options={countries} error="Select a currency." />
+      </main>,
+    );
+    await expectNoAxeViolations(container);
+  });
+`,
+  );
+
+  return { name: 'Select', component, story, test };
+}
+
 export function allTemplates(_tokens: ResolvedTokens): ComponentFiles[] {
-  return [buttonTemplate(), textFieldTemplate(), badgeTemplate(), alertTemplate()];
+  return [
+    buttonTemplate(),
+    textFieldTemplate(),
+    badgeTemplate(),
+    alertTemplate(),
+    checkboxTemplate(),
+    switchTemplate(),
+    radioGroupTemplate(),
+    selectTemplate(),
+  ];
 }
