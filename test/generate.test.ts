@@ -70,6 +70,11 @@ describe('generate', () => {
     expect(preview).not.toContain('globalTypes');
   });
 
+  it('omits the Theming section from the generated README when no darkColors are given', async () => {
+    const readme = await readFile(join(outDir, 'README.md'), 'utf8');
+    expect(readme).not.toContain('## Theming');
+  });
+
   it('generates a Button with a real button element and busy state', async () => {
     const button = await readFile(join(outDir, 'src/Button/Button.tsx'), 'utf8');
     expect(button).toContain('<button');
@@ -179,5 +184,11 @@ describe('generate with a dark palette', () => {
     const preview = await readFile(join(darkOutDir, '.storybook/preview.ts'), 'utf8');
     expect(preview).toContain('globalTypes');
     expect(preview).toContain("setAttribute('data-theme'");
+  });
+
+  it('adds a Theming section to the generated README', async () => {
+    const readme = await readFile(join(darkOutDir, 'README.md'), 'utf8');
+    expect(readme).toContain('## Theming');
+    expect(readme).toContain('data-theme');
   });
 });

@@ -198,6 +198,23 @@ export default preview;
 
 export function renderGeneratedReadme(tokens: ResolvedTokens, components: ComponentFiles[]): string {
   const list = components.map((c) => `- **${c.name}** — see \`src/${c.name}/${c.name}.docs.md\``).join('\n');
+  const theming = tokens.darkColors
+    ? `
+## Theming
+
+This system ships a dark palette alongside the light one, validated against
+WCAG AA independently (see \`src/tokens.css\`). It applies in three ways:
+
+- **Automatically**, via \`prefers-color-scheme: dark\`, when the page hasn't set a theme explicitly.
+- **Explicitly**, by setting \`data-theme="dark"\` or \`data-theme="light"\` on \`<html>\` (or any ancestor) — this overrides the OS preference.
+- **In Storybook**, via the "Theme" toolbar toggle.
+
+No JavaScript is required for the automatic or explicit cases — every
+component reads color through the same CSS custom properties, so switching
+\`data-theme\` re-themes the whole library instantly.
+`
+    : '';
+
   return `# ${tokens.name}-design-system
 
 A React + TypeScript component library generated from design tokens by
@@ -212,7 +229,7 @@ ${list}
 - Token colors were verified against WCAG AA contrast ratios **before generation** — the generator refuses to emit an inaccessible palette.
 - Every component ships with an axe-core test (\`npm test\`).
 - Storybook runs with \`@storybook/addon-a11y\` set to fail on violations.
-
+${theming}
 ## Scripts
 
 | Command | What it does |
