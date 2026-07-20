@@ -75,4 +75,46 @@ describe('token resolution', () => {
     expect(a11yError.issues.length).toBeGreaterThan(0);
     expect(a11yError.issues[0]?.required).toBe(4.5);
   });
+
+  it('leaves computed.dark undefined when no darkColors are given', () => {
+    const tokens = resolveTokens(parseTokens(validSpec));
+    expect(tokens.computed.dark).toBeUndefined();
+  });
+});
+
+describe('dark palette resolution', () => {
+  const withDark = {
+    ...validSpec,
+    darkColors: {
+      primary: '#3b82f6',
+      background: '#0f172a',
+      surface: '#1e293b',
+      text: '#f1f5f9',
+      textMuted: '#94a3b8',
+      danger: '#f87171',
+      success: '#4ade80',
+      warning: '#fbbf24',
+    },
+  };
+
+  it('computes on-colors and focus ring independently for the dark palette', () => {
+    const tokens = resolveTokens(parseTokens(withDark));
+    expect(tokens.computed.dark).toBeDefined();
+    expect(tokens.computed.dark?.onPrimary).toBe('#111827');
+    expect(tokens.computed.dark?.focusRingColor).toBe('#3b82f6');
+  });
+
+  it('validates the dark palette against WCAG AA independently of the light one', () => {
+    const bad = structuredClone(withDark);
+    bad.darkColors.textMuted = '#1e293b'; // near-identical to dark background — unreadable
+    let error: unknown;
+    try {
+      resolveTokens(parseTokens(bad));
+    } catch (err) {
+      error = err;
+    }
+    expect(error).toBeInstanceOf(AccessibilityError);
+    const a11yError = error as AccessibilityError;
+    expect(a11yError.message).toContain('dark: muted text on background');
+  });
 });
