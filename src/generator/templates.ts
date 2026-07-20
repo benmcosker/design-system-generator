@@ -397,6 +397,90 @@ export const Disabled: Story = { args: { disabled: true } };
   return { name: 'Checkbox', component, story, test };
 }
 
+export function switchTemplate(): ComponentFiles {
+  const component = `${HEADER}import * as React from 'react';
+import '../styles.css';
+
+export interface SwitchProps
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type' | 'id' | 'role'> {
+  /** Visible label — always rendered and programmatically associated. */
+  label: string;
+  /** Optional helper text, linked via aria-describedby. */
+  description?: string;
+}
+
+/**
+ * A native checkbox with role="switch" — screen readers announce it as a
+ * toggle, and it keeps the keyboard and state handling of a real form
+ * control instead of a hand-rolled div with custom key bindings.
+ */
+export function Switch({ label, description, className, ...rest }: SwitchProps) {
+  const id = React.useId();
+  const descriptionId = id + '-description';
+
+  return (
+    <div className={['ds-switch', className].filter(Boolean).join(' ')}>
+      <input
+        id={id}
+        type="checkbox"
+        role="switch"
+        className="ds-switch__input"
+        aria-describedby={description ? descriptionId : undefined}
+        {...rest}
+      />
+      <label className="ds-switch__label" htmlFor={id}>
+        {label}
+      </label>
+      {description ? (
+        <p className="ds-switch__description" id={descriptionId}>
+          {description}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+`;
+
+  const story = `${HEADER}import type { Meta, StoryObj } from '@storybook/react';
+import { Switch } from './Switch';
+
+const meta = {
+  title: 'Components/Switch',
+  component: Switch,
+  tags: ['autodocs'],
+  args: { label: 'Enable two-factor authentication' },
+} satisfies Meta<typeof Switch>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
+export const On: Story = { args: { defaultChecked: true } };
+export const WithDescription: Story = {
+  args: { description: "You'll need an authenticator app to sign in." },
+};
+export const Disabled: Story = { args: { disabled: true } };
+`;
+
+  const test = axeTest(
+    'Switch',
+    `  it('has no axe violations across states', async () => {
+    const { container } = render(
+      <main>
+        <Switch label="Default" />
+        <Switch label="On" defaultChecked />
+        <Switch label="Described" description="Extra context for this option." />
+        <Switch label="Disabled" disabled />
+      </main>,
+    );
+    await expectNoAxeViolations(container);
+  });
+`,
+  );
+
+  return { name: 'Switch', component, story, test };
+}
+
 export function allTemplates(_tokens: ResolvedTokens): ComponentFiles[] {
   return [
     buttonTemplate(),
@@ -404,5 +488,6 @@ export function allTemplates(_tokens: ResolvedTokens): ComponentFiles[] {
     badgeTemplate(),
     alertTemplate(),
     checkboxTemplate(),
+    switchTemplate(),
   ];
 }
