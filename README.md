@@ -64,6 +64,30 @@ Specs are validated with [zod](https://github.com/colinhacks/zod), and readable
 "on-colors" (e.g. the label color for a primary button) are computed
 automatically from your palette.
 
+### Dark mode
+
+Add an optional `darkColors` block, same shape as `colors`:
+
+```yaml
+darkColors:
+  primary: "#3b82f6"
+  background: "#0f172a"
+  surface: "#1e293b"
+  text: "#f1f5f9"
+  textMuted: "#94a3b8"
+  danger: "#f87171"
+  success: "#4ade80"
+  warning: "#fbbf24"
+```
+
+When present, the dark palette is checked against WCAG AA independently of
+the light one, and the generated `tokens.css` emits it as a theme override
+that applies automatically via `prefers-color-scheme: dark`, or explicitly
+via `data-theme="dark"` / `data-theme="light"` on any ancestor element — no
+JavaScript required, since every component already reads color through CSS
+custom properties. Storybook also gets a "Theme" toolbar toggle. Omit
+`darkColors` entirely for a light-only system; nothing else changes.
+
 ### What happens with an inaccessible palette?
 
 Generation refuses to proceed and tells you exactly why:
