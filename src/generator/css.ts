@@ -63,7 +63,8 @@ export function renderStylesCss(): string {
   transition: filter 120ms ease;
 }
 .ds-button:focus-visible,
-.ds-input:focus-visible {
+.ds-input:focus-visible,
+.ds-checkbox__input:focus-visible {
   outline: var(--ds-focus-ring-width) solid var(--ds-focus-ring-color);
   outline-offset: 2px;
 }
@@ -181,6 +182,30 @@ export function renderStylesCss(): string {
 .ds-alert__title {
   font-weight: 700;
   margin: 0 0 var(--ds-space-1);
+}
+
+.ds-checkbox {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: var(--ds-space-2);
+  font-family: var(--ds-font-family);
+  max-width: 40ch;
+}
+.ds-checkbox__input {
+  accent-color: var(--ds-color-primary);
+  width: 1rem;
+  height: 1rem;
+  margin-top: 0.2rem;
+}
+.ds-checkbox__label {
+  font-size: var(--ds-font-size-base);
+  color: var(--ds-color-text);
+}
+.ds-checkbox__description {
+  grid-column: 2;
+  font-size: var(--ds-font-size-sm);
+  color: var(--ds-color-text-muted);
+  margin: 0;
 }
 `;
 }
