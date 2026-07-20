@@ -33,8 +33,8 @@ afterAll(async () => {
 });
 
 describe('generate', () => {
-  it('emits all four components with source, story, test, and docs', () => {
-    expect(result.components).toEqual(['Button', 'TextField', 'Badge', 'Alert']);
+  it('emits all components with source, story, test, and docs', () => {
+    expect(result.components).toEqual(['Button', 'TextField', 'Badge', 'Alert', 'Checkbox']);
     for (const name of result.components) {
       expect(result.files).toContain(`src/${name}/${name}.tsx`);
       expect(result.files).toContain(`src/${name}/${name}.stories.tsx`);
@@ -68,6 +68,13 @@ describe('generate', () => {
   it('generates an Alert whose role depends on severity', async () => {
     const alert = await readFile(join(outDir, 'src/Alert/Alert.tsx'), 'utf8');
     expect(alert).toContain(`tone === 'danger' ? 'alert' : 'status'`);
+  });
+
+  it('generates a Checkbox with a wired label and optional description', async () => {
+    const checkbox = await readFile(join(outDir, 'src/Checkbox/Checkbox.tsx'), 'utf8');
+    expect(checkbox).toContain("type=\"checkbox\"");
+    expect(checkbox).toContain('htmlFor={id}');
+    expect(checkbox).toContain('aria-describedby');
   });
 
   it('emits an axe-core test per component', async () => {

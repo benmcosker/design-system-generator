@@ -319,6 +319,90 @@ export const Danger: Story = {
   return { name: 'Alert', component, story, test };
 }
 
+export function checkboxTemplate(): ComponentFiles {
+  const component = `${HEADER}import * as React from 'react';
+import '../styles.css';
+
+export interface CheckboxProps
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type' | 'id'> {
+  /** Visible label — always rendered and programmatically associated. */
+  label: string;
+  /** Optional helper text, linked via aria-describedby. */
+  description?: string;
+}
+
+export function Checkbox({ label, description, className, ...rest }: CheckboxProps) {
+  const id = React.useId();
+  const descriptionId = id + '-description';
+
+  return (
+    <div className={['ds-checkbox', className].filter(Boolean).join(' ')}>
+      <input
+        id={id}
+        type="checkbox"
+        className="ds-checkbox__input"
+        aria-describedby={description ? descriptionId : undefined}
+        {...rest}
+      />
+      <label className="ds-checkbox__label" htmlFor={id}>
+        {label}
+      </label>
+      {description ? (
+        <p className="ds-checkbox__description" id={descriptionId}>
+          {description}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+`;
+
+  const story = `${HEADER}import type { Meta, StoryObj } from '@storybook/react';
+import { Checkbox } from './Checkbox';
+
+const meta = {
+  title: 'Components/Checkbox',
+  component: Checkbox,
+  tags: ['autodocs'],
+  args: { label: 'Email me about product updates' },
+} satisfies Meta<typeof Checkbox>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
+export const Checked: Story = { args: { defaultChecked: true } };
+export const WithDescription: Story = {
+  args: { description: 'About once a month. Unsubscribe anytime.' },
+};
+export const Disabled: Story = { args: { disabled: true } };
+`;
+
+  const test = axeTest(
+    'Checkbox',
+    `  it('has no axe violations across states', async () => {
+    const { container } = render(
+      <main>
+        <Checkbox label="Default" />
+        <Checkbox label="Checked" defaultChecked />
+        <Checkbox label="Described" description="Extra context for this option." />
+        <Checkbox label="Disabled" disabled />
+      </main>,
+    );
+    await expectNoAxeViolations(container);
+  });
+`,
+  );
+
+  return { name: 'Checkbox', component, story, test };
+}
+
 export function allTemplates(_tokens: ResolvedTokens): ComponentFiles[] {
-  return [buttonTemplate(), textFieldTemplate(), badgeTemplate(), alertTemplate()];
+  return [
+    buttonTemplate(),
+    textFieldTemplate(),
+    badgeTemplate(),
+    alertTemplate(),
+    checkboxTemplate(),
+  ];
 }
