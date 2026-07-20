@@ -53,7 +53,7 @@ export async function generate(
   await write('vitest.config.ts', renderVitestConfig());
   await write('README.md', renderGeneratedReadme(tokens, components));
   await write('.storybook/main.ts', renderStorybookMain());
-  await write('.storybook/preview.ts', renderStorybookPreview());
+  await write('.storybook/preview.ts', renderStorybookPreview(Boolean(tokens.darkColors)));
   await write('src/tokens.css', renderTokensCss(tokens));
   await write('src/styles.css', renderStylesCss());
   await write('src/index.ts', renderIndexTs(components));
