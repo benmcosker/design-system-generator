@@ -65,6 +65,11 @@ describe('generate', () => {
     expect(css).not.toContain('data-theme');
   });
 
+  it('omits the Storybook theme toggle when no darkColors are given', async () => {
+    const preview = await readFile(join(outDir, '.storybook/preview.ts'), 'utf8');
+    expect(preview).not.toContain('globalTypes');
+  });
+
   it('generates a Button with a real button element and busy state', async () => {
     const button = await readFile(join(outDir, 'src/Button/Button.tsx'), 'utf8');
     expect(button).toContain('<button');
@@ -168,5 +173,11 @@ describe('generate with a dark palette', () => {
     expect(css).toContain("[data-theme='light']");
     expect(css).toContain('--ds-color-background: #0f172a;');
     expect(css).toContain('color-scheme: light dark;');
+  });
+
+  it('adds a Storybook theme toggle that sets data-theme', async () => {
+    const preview = await readFile(join(darkOutDir, '.storybook/preview.ts'), 'utf8');
+    expect(preview).toContain('globalTypes');
+    expect(preview).toContain("setAttribute('data-theme'");
   });
 });
