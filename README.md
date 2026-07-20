@@ -92,9 +92,12 @@ generated-ds/
 │   └── TextField/ Badge/ Alert/ …
 ```
 
-Components generated today: **Button**, **TextField**, **Badge**, **Alert** —
-each with real semantics (wired labels, `aria-describedby` plumbing,
-severity-appropriate live regions, keyboard-visible focus rings).
+Components generated today: **Button**, **TextField**, **Badge**, **Alert**,
+**Checkbox**, **Switch**, **RadioGroup**, **Select** — each built on real
+semantic HTML wherever possible (native checkboxes, radios, and `<select>`)
+so keyboard support, labeling, and state come from the browser instead of
+hand-rolled ARIA: wired labels, `aria-describedby` plumbing,
+severity-appropriate live regions, keyboard-visible focus rings.
 
 ## How the accessibility guarantee works
 
