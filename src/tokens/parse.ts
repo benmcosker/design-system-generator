@@ -1,8 +1,37 @@
 import { readFile } from 'node:fs/promises';
 import { extname } from 'node:path';
 import YAML from 'yaml';
-import { tokenSpecSchema, type ResolvedTokens, type TokenSpec } from './schema.js';
-import { bestTextOn, findContrastIssues, type ContrastIssue } from './contrast.js';
+import { tokenSpecSchema, type ResolvedTokens, type ThemeComputed, type TokenSpec } from './schema.js';
+import { bestTextOn, findContrastIssues, type ContrastCheck, type ContrastIssue } from './contrast.js';
+
+type Colors = TokenSpec['colors'];
+type Focus = TokenSpec['focus'];
+
+function computeThemeColors(colors: Colors, focus: Focus): ThemeComputed {
+  return {
+    onPrimary: bestTextOn(colors.primary),
+    onDanger: bestTextOn(colors.danger),
+    onSuccess: bestTextOn(colors.success),
+    onWarning: bestTextOn(colors.warning),
+    focusRingColor: focus.ringColor ?? colors.primary,
+  };
+}
+
+/** Contrast checks for one palette. `label` prefixes each pair name (e.g. "dark: "). */
+function contrastChecksFor(colors: Colors, computed: ThemeComputed, label = ''): ContrastCheck[] {
+  const p = label ? `${label}: ` : '';
+  return [
+    { pair: `${p}text on background`, foreground: colors.text, background: colors.background, required: 4.5 },
+    { pair: `${p}text on surface`, foreground: colors.text, background: colors.surface, required: 4.5 },
+    { pair: `${p}muted text on background`, foreground: colors.textMuted, background: colors.background, required: 4.5 },
+    { pair: `${p}label on primary button`, foreground: computed.onPrimary, background: colors.primary, required: 4.5 },
+    { pair: `${p}label on danger button`, foreground: computed.onDanger, background: colors.danger, required: 4.5 },
+    { pair: `${p}danger text on background`, foreground: colors.danger, background: colors.background, required: 4.5 },
+    { pair: `${p}success text on background`, foreground: colors.success, background: colors.background, required: 4.5 },
+    { pair: `${p}primary as UI boundary`, foreground: colors.primary, background: colors.background, required: 3 },
+    { pair: `${p}focus ring on background`, foreground: computed.focusRingColor, background: colors.background, required: 3 },
+  ];
+}
 
 export class TokenSpecError extends Error {
   constructor(message: string) {
@@ -56,30 +85,18 @@ export function parseTokens(data: unknown, source = 'token spec'): TokenSpec {
  * components — the generator refuses to emit an inaccessible system.
  */
 export function resolveTokens(spec: TokenSpec): ResolvedTokens {
-  const { colors } = spec;
-  const computed = {
-    onPrimary: bestTextOn(colors.primary),
-    onDanger: bestTextOn(colors.danger),
-    onSuccess: bestTextOn(colors.success),
-    onWarning: bestTextOn(colors.warning),
-    focusRingColor: spec.focus.ringColor ?? colors.primary,
-  };
+  const computed = computeThemeColors(spec.colors, spec.focus);
+  let issues = findContrastIssues(contrastChecksFor(spec.colors, computed));
 
-  const issues = findContrastIssues([
-    { pair: 'text on background', foreground: colors.text, background: colors.background, required: 4.5 },
-    { pair: 'text on surface', foreground: colors.text, background: colors.surface, required: 4.5 },
-    { pair: 'muted text on background', foreground: colors.textMuted, background: colors.background, required: 4.5 },
-    { pair: 'label on primary button', foreground: computed.onPrimary, background: colors.primary, required: 4.5 },
-    { pair: 'label on danger button', foreground: computed.onDanger, background: colors.danger, required: 4.5 },
-    { pair: 'danger text on background', foreground: colors.danger, background: colors.background, required: 4.5 },
-    { pair: 'success text on background', foreground: colors.success, background: colors.background, required: 4.5 },
-    { pair: 'primary as UI boundary', foreground: colors.primary, background: colors.background, required: 3 },
-    { pair: 'focus ring on background', foreground: computed.focusRingColor, background: colors.background, required: 3 },
-  ]);
+  let dark: ThemeComputed | undefined;
+  if (spec.darkColors) {
+    dark = computeThemeColors(spec.darkColors, spec.focus);
+    issues = issues.concat(findContrastIssues(contrastChecksFor(spec.darkColors, dark, 'dark')));
+  }
 
   if (issues.length > 0) {
     throw new AccessibilityError(issues);
   }
 
-  return { ...spec, computed };
+  return { ...spec, computed: { ...computed, dark } };
 }

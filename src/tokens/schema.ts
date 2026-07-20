@@ -9,22 +9,30 @@ const hexColor = z
  * Everything optional has a sensible default so a minimal spec still
  * produces a complete design system.
  */
+const colorsSchema = z.object({
+  primary: hexColor,
+  background: hexColor,
+  surface: hexColor,
+  text: hexColor,
+  textMuted: hexColor,
+  danger: hexColor,
+  success: hexColor,
+  warning: hexColor,
+});
+
 export const tokenSpecSchema = z.object({
   /** Machine name for the generated package, e.g. "acme" -> acme-design-system */
   name: z
     .string()
     .min(1)
     .regex(/^[a-z][a-z0-9-]*$/, 'must be lowercase kebab-case'),
-  colors: z.object({
-    primary: hexColor,
-    background: hexColor,
-    surface: hexColor,
-    text: hexColor,
-    textMuted: hexColor,
-    danger: hexColor,
-    success: hexColor,
-    warning: hexColor,
-  }),
+  colors: colorsSchema,
+  /**
+   * Optional dark-theme palette, same shape as `colors`. When present, the
+   * generator validates it against WCAG AA independently and emits it as a
+   * `[data-theme="dark"]` / `prefers-color-scheme: dark` CSS override.
+   */
+  darkColors: colorsSchema.optional(),
   typography: z
     .object({
       fontFamily: z
@@ -61,12 +69,17 @@ export type TokenSpec = z.infer<typeof tokenSpecSchema>;
  * Token spec plus values the generator computes: readable foreground
  * colors for each filled surface, and the resolved focus-ring color.
  */
+export interface ThemeComputed {
+  onPrimary: string;
+  onDanger: string;
+  onSuccess: string;
+  onWarning: string;
+  focusRingColor: string;
+}
+
 export interface ResolvedTokens extends TokenSpec {
-  computed: {
-    onPrimary: string;
-    onDanger: string;
-    onSuccess: string;
-    onWarning: string;
-    focusRingColor: string;
+  computed: ThemeComputed & {
+    /** Present only when the spec provides `darkColors`. */
+    dark?: ThemeComputed;
   };
 }
