@@ -64,7 +64,8 @@ export function renderStylesCss(): string {
 }
 .ds-button:focus-visible,
 .ds-input:focus-visible,
-.ds-checkbox__input:focus-visible {
+.ds-checkbox__input:focus-visible,
+.ds-switch__input:focus-visible {
   outline: var(--ds-focus-ring-width) solid var(--ds-focus-ring-color);
   outline-offset: 2px;
 }
@@ -202,6 +203,58 @@ export function renderStylesCss(): string {
   color: var(--ds-color-text);
 }
 .ds-checkbox__description {
+  grid-column: 2;
+  font-size: var(--ds-font-size-sm);
+  color: var(--ds-color-text-muted);
+  margin: 0;
+}
+
+.ds-switch {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: var(--ds-space-2);
+  font-family: var(--ds-font-family);
+  max-width: 40ch;
+}
+.ds-switch__input {
+  appearance: none;
+  position: relative;
+  width: 2.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  margin: 0;
+  border-radius: 999px;
+  background: var(--ds-color-text-muted);
+  cursor: pointer;
+  transition: background 120ms ease;
+}
+.ds-switch__input::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background: var(--ds-color-background);
+  transition: transform 120ms ease;
+}
+.ds-switch__input:checked {
+  background: var(--ds-color-primary);
+}
+.ds-switch__input:checked::after {
+  transform: translateX(1rem);
+}
+.ds-switch__input:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.ds-switch__label {
+  font-size: var(--ds-font-size-base);
+  color: var(--ds-color-text);
+}
+.ds-switch__description {
   grid-column: 2;
   font-size: var(--ds-font-size-sm);
   color: var(--ds-color-text-muted);

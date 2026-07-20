@@ -34,7 +34,14 @@ afterAll(async () => {
 
 describe('generate', () => {
   it('emits all components with source, story, test, and docs', () => {
-    expect(result.components).toEqual(['Button', 'TextField', 'Badge', 'Alert', 'Checkbox']);
+    expect(result.components).toEqual([
+      'Button',
+      'TextField',
+      'Badge',
+      'Alert',
+      'Checkbox',
+      'Switch',
+    ]);
     for (const name of result.components) {
       expect(result.files).toContain(`src/${name}/${name}.tsx`);
       expect(result.files).toContain(`src/${name}/${name}.stories.tsx`);
@@ -75,6 +82,12 @@ describe('generate', () => {
     expect(checkbox).toContain("type=\"checkbox\"");
     expect(checkbox).toContain('htmlFor={id}');
     expect(checkbox).toContain('aria-describedby');
+  });
+
+  it('generates a Switch with role=switch and a wired label', async () => {
+    const switchComponent = await readFile(join(outDir, 'src/Switch/Switch.tsx'), 'utf8');
+    expect(switchComponent).toContain('role="switch"');
+    expect(switchComponent).toContain('htmlFor={id}');
   });
 
   it('emits an axe-core test per component', async () => {
