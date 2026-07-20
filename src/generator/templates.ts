@@ -600,6 +600,119 @@ export const Disabled: Story = { args: { disabled: true, defaultValue: 'free' } 
   return { name: 'RadioGroup', component, story, test };
 }
 
+export function selectTemplate(): ComponentFiles {
+  const component = `${HEADER}import * as React from 'react';
+import '../styles.css';
+
+export interface SelectOption {
+  value: string;
+  label: string;
+}
+
+export interface SelectProps
+  extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'id' | 'aria-describedby'> {
+  /** Visible label — always rendered and programmatically associated. */
+  label: string;
+  options: SelectOption[];
+  /** Optional helper text, linked via aria-describedby. */
+  description?: string;
+  /** Validation message. Sets aria-invalid and is announced politely. */
+  error?: string;
+}
+
+/** A native <select> — full keyboard support and platform picker UI for free. */
+export function Select({ label, options, description, error, required, ...rest }: SelectProps) {
+  const id = React.useId();
+  const descriptionId = id + '-description';
+  const errorId = id + '-error';
+  const describedBy =
+    [description ? descriptionId : null, error ? errorId : null].filter(Boolean).join(' ') ||
+    undefined;
+
+  return (
+    <div className="ds-field">
+      <label className="ds-field__label" htmlFor={id}>
+        {label}
+        {required ? <span aria-hidden="true"> *</span> : null}
+      </label>
+      {description ? (
+        <p className="ds-field__description" id={descriptionId}>
+          {description}
+        </p>
+      ) : null}
+      <select
+        id={id}
+        className="ds-select"
+        aria-describedby={describedBy}
+        aria-invalid={error ? true : undefined}
+        required={required}
+        {...rest}
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+      <p className="ds-field__error" id={errorId} aria-live="polite">
+        {error ?? ''}
+      </p>
+    </div>
+  );
+}
+`;
+
+  const story = `${HEADER}import type { Meta, StoryObj } from '@storybook/react';
+import { Select } from './Select';
+
+const countries = [
+  { value: 'us', label: 'United States' },
+  { value: 'gb', label: 'United Kingdom' },
+  { value: 'de', label: 'Germany' },
+];
+
+const meta = {
+  title: 'Components/Select',
+  component: Select,
+  tags: ['autodocs'],
+  args: { label: 'Country', options: countries },
+} satisfies Meta<typeof Select>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
+export const WithDescription: Story = {
+  args: { description: 'Used to calculate shipping and tax.' },
+};
+export const Required: Story = { args: { required: true } };
+export const WithError: Story = { args: { error: 'Select a country to continue.' } };
+`;
+
+  const test = axeTest(
+    'Select',
+    `  const countries = [
+    { value: 'us', label: 'United States' },
+    { value: 'gb', label: 'United Kingdom' },
+    { value: 'de', label: 'Germany' },
+  ];
+
+  it('has no axe violations in default, described, and error states', async () => {
+    const { container } = render(
+      <main>
+        <Select label="Country" options={countries} />
+        <Select label="Region" options={countries} description="Used for shipping." required />
+        <Select label="Currency" options={countries} error="Select a currency." />
+      </main>,
+    );
+    await expectNoAxeViolations(container);
+  });
+`,
+  );
+
+  return { name: 'Select', component, story, test };
+}
+
 export function allTemplates(_tokens: ResolvedTokens): ComponentFiles[] {
   return [
     buttonTemplate(),
@@ -609,5 +722,6 @@ export function allTemplates(_tokens: ResolvedTokens): ComponentFiles[] {
     checkboxTemplate(),
     switchTemplate(),
     radioGroupTemplate(),
+    selectTemplate(),
   ];
 }
