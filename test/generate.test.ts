@@ -59,6 +59,12 @@ describe('generate', () => {
     expect(css).toContain('--ds-focus-ring-width: 3px;');
   });
 
+  it('omits dark-theme CSS when no darkColors are given', async () => {
+    const css = await readFile(join(outDir, 'src/tokens.css'), 'utf8');
+    expect(css).not.toContain('prefers-color-scheme');
+    expect(css).not.toContain('data-theme');
+  });
+
   it('generates a Button with a real button element and busy state', async () => {
     const button = await readFile(join(outDir, 'src/Button/Button.tsx'), 'utf8');
     expect(button).toContain('<button');
@@ -123,5 +129,44 @@ describe('generate', () => {
     const docs = await readFile(join(outDir, 'src/Button/Button.docs.md'), 'utf8');
     expect(docs).toContain('# Button');
     expect(docs).toContain('--ai-docs');
+  });
+});
+
+describe('generate with a dark palette', () => {
+  const darkSpec = {
+    ...spec,
+    darkColors: {
+      primary: '#3b82f6',
+      background: '#0f172a',
+      surface: '#1e293b',
+      text: '#f1f5f9',
+      textMuted: '#94a3b8',
+      danger: '#f87171',
+      success: '#4ade80',
+      warning: '#fbbf24',
+    },
+  };
+
+  let darkOutDir: string;
+
+  beforeAll(async () => {
+    darkOutDir = await mkdtemp(join(tmpdir(), 'dsg-test-dark-'));
+    const tokens = resolveTokens(parseTokens(darkSpec));
+    await generate(tokens, { outDir: darkOutDir, aiDocs: false });
+  });
+
+  afterAll(async () => {
+    await rm(darkOutDir, { recursive: true, force: true });
+  });
+
+  it('emits both the light :root block and dark overrides', async () => {
+    const css = await readFile(join(darkOutDir, 'src/tokens.css'), 'utf8');
+    expect(css).toContain(':root {');
+    expect(css).toContain('--ds-color-background: #ffffff;');
+    expect(css).toContain('@media (prefers-color-scheme: dark)');
+    expect(css).toContain("[data-theme='dark']");
+    expect(css).toContain("[data-theme='light']");
+    expect(css).toContain('--ds-color-background: #0f172a;');
+    expect(css).toContain('color-scheme: light dark;');
   });
 });
