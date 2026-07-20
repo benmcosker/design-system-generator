@@ -42,6 +42,7 @@ describe('generate', () => {
       'Checkbox',
       'Switch',
       'RadioGroup',
+      'Select',
     ]);
     for (const name of result.components) {
       expect(result.files).toContain(`src/${name}/${name}.tsx`);
@@ -96,6 +97,13 @@ describe('generate', () => {
     expect(radioGroup).toContain('<fieldset');
     expect(radioGroup).toContain('<legend');
     expect(radioGroup).toContain('type="radio"');
+  });
+
+  it('generates a Select with a wired label, options, and aria-invalid', async () => {
+    const select = await readFile(join(outDir, 'src/Select/Select.tsx'), 'utf8');
+    expect(select).toContain('<select');
+    expect(select).toContain('htmlFor={id}');
+    expect(select).toContain('aria-invalid');
   });
 
   it('emits an axe-core test per component', async () => {

@@ -66,7 +66,8 @@ export function renderStylesCss(): string {
 .ds-input:focus-visible,
 .ds-checkbox__input:focus-visible,
 .ds-switch__input:focus-visible,
-.ds-radio-group__input:focus-visible {
+.ds-radio-group__input:focus-visible,
+.ds-select:focus-visible {
   outline: var(--ds-focus-ring-width) solid var(--ds-focus-ring-color);
   outline-offset: 2px;
 }
@@ -133,6 +134,18 @@ export function renderStylesCss(): string {
   padding: var(--ds-space-2) var(--ds-space-3);
 }
 .ds-input[aria-invalid='true'] {
+  border-color: var(--ds-color-danger);
+}
+.ds-select {
+  font-family: var(--ds-font-family);
+  font-size: var(--ds-font-size-base);
+  color: var(--ds-color-text);
+  background: var(--ds-color-background);
+  border: 2px solid var(--ds-color-text-muted);
+  border-radius: var(--ds-radius-sm);
+  padding: var(--ds-space-2) var(--ds-space-3);
+}
+.ds-select[aria-invalid='true'] {
   border-color: var(--ds-color-danger);
 }
 
