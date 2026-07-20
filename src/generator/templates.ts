@@ -481,6 +481,125 @@ export const Disabled: Story = { args: { disabled: true } };
   return { name: 'Switch', component, story, test };
 }
 
+export function radioGroupTemplate(): ComponentFiles {
+  const component = `${HEADER}import * as React from 'react';
+import '../styles.css';
+
+export interface RadioOption {
+  value: string;
+  label: string;
+}
+
+export interface RadioGroupProps
+  extends Omit<React.FieldsetHTMLAttributes<HTMLFieldSetElement>, 'onChange'> {
+  /** Rendered as the fieldset's <legend> — announced once for the whole group. */
+  legend: string;
+  name: string;
+  options: RadioOption[];
+  value?: string;
+  defaultValue?: string;
+  onChange?: (value: string) => void;
+  required?: boolean;
+}
+
+/**
+ * A native <fieldset>/<legend> group of radio inputs. Arrow-key navigation
+ * between options is handled by the browser for free because they're real
+ * radio inputs sharing one \`name\` — no roving-tabindex code needed.
+ */
+export function RadioGroup({
+  legend,
+  name,
+  options,
+  value,
+  defaultValue,
+  onChange,
+  disabled,
+  required,
+  className,
+  ...rest
+}: RadioGroupProps) {
+  return (
+    <fieldset className={['ds-radio-group', className].filter(Boolean).join(' ')} {...rest}>
+      <legend className="ds-radio-group__legend">
+        {legend}
+        {required ? <span aria-hidden="true"> *</span> : null}
+      </legend>
+      {options.map((option) => (
+        <label key={option.value} className="ds-radio-group__option">
+          <input
+            type="radio"
+            className="ds-radio-group__input"
+            name={name}
+            value={option.value}
+            checked={value !== undefined ? value === option.value : undefined}
+            defaultChecked={
+              value === undefined && defaultValue !== undefined
+                ? defaultValue === option.value
+                : undefined
+            }
+            disabled={disabled}
+            required={required}
+            onChange={onChange ? () => onChange(option.value) : undefined}
+          />
+          {option.label}
+        </label>
+      ))}
+    </fieldset>
+  );
+}
+`;
+
+  const story = `${HEADER}import type { Meta, StoryObj } from '@storybook/react';
+import { RadioGroup } from './RadioGroup';
+
+const plans = [
+  { value: 'free', label: 'Free' },
+  { value: 'pro', label: 'Pro' },
+  { value: 'team', label: 'Team' },
+];
+
+const meta = {
+  title: 'Components/RadioGroup',
+  component: RadioGroup,
+  tags: ['autodocs'],
+  args: { legend: 'Plan', name: 'plan', options: plans },
+} satisfies Meta<typeof RadioGroup>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
+export const WithDefault: Story = { args: { defaultValue: 'pro' } };
+export const Required: Story = { args: { required: true } };
+export const Disabled: Story = { args: { disabled: true, defaultValue: 'free' } };
+`;
+
+  const test = axeTest(
+    'RadioGroup',
+    `  const plans = [
+    { value: 'free', label: 'Free' },
+    { value: 'pro', label: 'Pro' },
+    { value: 'team', label: 'Team' },
+  ];
+
+  it('has no axe violations across states', async () => {
+    const { container } = render(
+      <main>
+        <RadioGroup legend="Plan" name="plan-default" options={plans} />
+        <RadioGroup legend="Plan (preselected)" name="plan-preselected" options={plans} defaultValue="pro" />
+        <RadioGroup legend="Plan (required)" name="plan-required" options={plans} required />
+        <RadioGroup legend="Plan (disabled)" name="plan-disabled" options={plans} disabled defaultValue="free" />
+      </main>,
+    );
+    await expectNoAxeViolations(container);
+  });
+`,
+  );
+
+  return { name: 'RadioGroup', component, story, test };
+}
+
 export function allTemplates(_tokens: ResolvedTokens): ComponentFiles[] {
   return [
     buttonTemplate(),
@@ -489,5 +608,6 @@ export function allTemplates(_tokens: ResolvedTokens): ComponentFiles[] {
     alertTemplate(),
     checkboxTemplate(),
     switchTemplate(),
+    radioGroupTemplate(),
   ];
 }

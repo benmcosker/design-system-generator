@@ -41,6 +41,7 @@ describe('generate', () => {
       'Alert',
       'Checkbox',
       'Switch',
+      'RadioGroup',
     ]);
     for (const name of result.components) {
       expect(result.files).toContain(`src/${name}/${name}.tsx`);
@@ -88,6 +89,13 @@ describe('generate', () => {
     const switchComponent = await readFile(join(outDir, 'src/Switch/Switch.tsx'), 'utf8');
     expect(switchComponent).toContain('role="switch"');
     expect(switchComponent).toContain('htmlFor={id}');
+  });
+
+  it('generates a RadioGroup as a native fieldset/legend with shared name', async () => {
+    const radioGroup = await readFile(join(outDir, 'src/RadioGroup/RadioGroup.tsx'), 'utf8');
+    expect(radioGroup).toContain('<fieldset');
+    expect(radioGroup).toContain('<legend');
+    expect(radioGroup).toContain('type="radio"');
   });
 
   it('emits an axe-core test per component', async () => {
