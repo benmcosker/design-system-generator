@@ -1,5 +1,5 @@
 {
-  "name": "@benmcosker/design-system-generator",
+  "name": "@benmcsosker/design-system-generator",
   "version": "0.0.0-development",
   "description": "AI-assisted, accessibility-first design-system generator: design tokens in, React + TypeScript component library out — with axe-core tests, Storybook docs, and Claude-written usage guides.",
   "keywords": [
