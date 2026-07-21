@@ -133,34 +133,6 @@ npm run dev -- generate example/tokens.yaml -o /tmp/out
 Releases are automated with semantic-release on `main` using conventional
 commits (`feat:`, `fix:`, `feat!:`…).
 
-## Setup still to do
-
-The scaffold is verified end-to-end (20 unit tests pass; the example system
-generates, installs, typechecks, and passes its axe-core suite), and releases
-are live: the `NPM_TOKEN` secret is configured, and `package.json` sets
-`publishConfig.access: "public"` so the scoped package publishes correctly.
-One thing still needs attention:
-
-### Exercise the `--ai-docs` path against the live Claude API
-
-The AI-docs code path is wired up and falls back gracefully, but it has **not
-been run against the real API yet** — local verification used the deterministic
-fallback. Before demoing it, do one live run and eyeball the output:
-
-```bash
-export ANTHROPIC_API_KEY=sk-ant-...
-node dist/cli.js generate example/tokens.yaml -o /tmp/ai-docs-check --ai-docs
-# then read a generated doc, e.g. /tmp/ai-docs-check/src/Button/Button.docs.md
-```
-
-Things to check: the model (`claude-opus-4-8`) and streaming/adaptive-thinking
-call in [`src/ai/docs.ts`](src/ai/docs.ts) behave as expected, the docs are
-grounded in the real component source (props table matches, no invented
-behavior), and the SDK version (`@anthropic-ai/sdk` ^0.111.0) is current. If you
-want the AI docs exercised in CI, add a job gated on an `ANTHROPIC_API_KEY`
-secret — keep it optional so PRs from forks (which can't read secrets) still go
-green.
-
 ## License
 
 MIT
