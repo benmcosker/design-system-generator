@@ -16,6 +16,9 @@
   ],
   "license": "MIT",
   "author": "Ben McCosker",
+  "publishConfig": {
+    "access": "public"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/benmcosker/design-system-generator.git"

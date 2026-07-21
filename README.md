@@ -136,25 +136,12 @@ commits (`feat:`, `fix:`, `feat!:`…).
 ## Setup still to do
 
 The scaffold is verified end-to-end (20 unit tests pass; the example system
-generates, installs, typechecks, and passes its axe-core suite), but two things
-need attention before the project is fully live:
+generates, installs, typechecks, and passes its axe-core suite), and releases
+are live: the `NPM_TOKEN` secret is configured, and `package.json` sets
+`publishConfig.access: "public"` so the scoped package publishes correctly.
+One thing still needs attention:
 
-### 1. Add the `NPM_TOKEN` secret so releases can publish
-
-The `release.yml` workflow runs [semantic-release](https://github.com/semantic-release/semantic-release)
-on every push to `main`, and its `@semantic-release/npm` step needs an npm
-automation token to publish. **Until the secret exists, the release job will
-fail** (the CI job is independent and will still pass).
-
-- Create an **automation** access token at <https://www.npmjs.com/settings/~/tokens> (must have publish rights to the `@benmcosker` scope).
-- Add it as a repo secret named `NPM_TOKEN`: repo **Settings → Secrets and variables → Actions → New repository secret**.
-- Confirm the package name in `package.json` (`@benmcosker/design-system-generator`) is publishable under your npm account, and that the scope is set to public (`publishConfig.access` or `npm publish --access public`).
-
-If you'd rather not publish to npm yet, remove `@semantic-release/npm` from
-[`.releaserc.json`](.releaserc.json) to get GitHub-only releases (tags +
-release notes) with no token required.
-
-### 2. Exercise the `--ai-docs` path against the live Claude API
+### Exercise the `--ai-docs` path against the live Claude API
 
 The AI-docs code path is wired up and falls back gracefully, but it has **not
 been run against the real API yet** — local verification used the deterministic
