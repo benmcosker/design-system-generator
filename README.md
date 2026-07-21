@@ -1,6 +1,7 @@
 # design-system-generator
 
 [![CI](https://github.com/benmcosker/design-system-generator/actions/workflows/ci.yml/badge.svg)](https://github.com/benmcosker/design-system-generator/actions/workflows/ci.yml)
+[![npm version](https://img.shields.io/npm/v/@benmcsosker/design-system-generator.svg)](https://www.npmjs.com/package/@benmcsosker/design-system-generator)
 
 **Design tokens in → accessible React + TypeScript component library out.**
 
