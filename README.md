@@ -1,7 +1,7 @@
 # design-system-generator
 
 [![CI](https://github.com/benmcosker/design-system-generator/actions/workflows/ci.yml/badge.svg)](https://github.com/benmcosker/design-system-generator/actions/workflows/ci.yml)
-[![npm version](https://img.shields.io/npm/v/@benmcsosker/design-system-generator.svg)](https://www.npmjs.com/package/@benmcsosker/design-system-generator)
+[![npm version](https://img.shields.io/npm/v/@benjaminmcosker/design-system-generator.svg)](https://www.npmjs.com/package/@benjaminmcosker/design-system-generator)
 [![Storybook](https://img.shields.io/badge/Storybook-live%20demo-FF4785?logo=storybook&logoColor=white)](https://main--6a5fc3291d6b2fa47f0cdd53.chromatic.com/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
