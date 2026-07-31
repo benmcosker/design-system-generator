@@ -69,12 +69,36 @@ automatically from your palette.
 
 ### What happens with an inaccessible palette?
 
-Generation refuses to proceed and tells you exactly why:
+Generation refuses to proceed and tells you exactly why. Take this spec —
+`textMuted` is too light and `primary` is too pale for a focus ring:
 
+```yaml
+name: acme
+colors:
+  primary: "#60a5fa"    # too light for a 3:1 UI boundary / focus ring
+  background: "#ffffff"
+  surface: "#f8fafc"
+  text: "#0f172a"
+  textMuted: "#cbd5e1"  # too light for 4.5:1 body text
+  danger: "#b91c1c"
+  success: "#15803d"
+  warning: "#b45309"
 ```
+
+```bash
+$ node dist/cli.js check bad-tokens.yaml
+
 Token spec fails WCAG AA contrast requirements:
-  - muted text on background: #cbd5e1 on #ffffff is 1.47:1 (needs 4.5:1)
+  - muted text on background: #cbd5e1 on #ffffff is 1.48:1 (needs 4.5:1)
+  - primary as UI boundary: #60a5fa on #ffffff is 2.54:1 (needs 3:1)
+  - focus ring on background: #60a5fa on #ffffff is 2.54:1 (needs 3:1)
+
+$ echo $?
+1
 ```
+
+No components are generated and the process exits non-zero — this is exactly
+the check CI runs, so an inaccessible spec can't reach `main`.
 
 ## What gets generated
 
