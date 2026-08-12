@@ -1,0 +1,13 @@
+# Fail fixture — muted text is too light against the background (~1.48:1,
+# needs 4.5:1). Must exit non-zero.
+name: washed-out
+
+colors:
+  primary: "#1d4ed8"
+  background: "#ffffff"
+  surface: "#f8fafc"
+  text: "#0f172a"
+  textMuted: "#cbd5e1"
+  danger: "#b91c1c"
+  success: "#15803d"
+  warning: "#b45309"

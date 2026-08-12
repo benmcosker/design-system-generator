@@ -1,0 +1,12 @@
+# Pass fixture — same palette as example/tokens.yaml. Every pair clears WCAG AA.
+name: acme
+
+colors:
+  primary: "#1d4ed8"
+  background: "#ffffff"
+  surface: "#f8fafc"
+  text: "#0f172a"
+  textMuted: "#475569"
+  danger: "#b91c1c"
+  success: "#15803d"
+  warning: "#b45309"

@@ -1,0 +1,14 @@
+# Fail fixture — primary is too light to serve as a UI boundary against the
+# background (~1.8:1, needs 3:1), even though label-on-primary text still
+# passes. Must exit non-zero.
+name: pale-primary
+
+colors:
+  primary: "#93c5fd"
+  background: "#ffffff"
+  surface: "#f8fafc"
+  text: "#0f172a"
+  textMuted: "#475569"
+  danger: "#b91c1c"
+  success: "#15803d"
+  warning: "#b45309"
