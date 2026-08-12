@@ -119,6 +119,35 @@ describe('generate', () => {
     expect(pkg.devDependencies['axe-core']).toBeDefined();
   });
 
+  it('emits a package.json with the contrast check script and the generator as a devDependency', async () => {
+    const pkg = JSON.parse(await readFile(join(outDir, 'package.json'), 'utf8'));
+    expect(pkg.scripts.check).toBe('dsg check tokens.yaml');
+    expect(pkg.devDependencies['@benjaminmcosker/design-system-generator']).toBeDefined();
+  });
+
+  it('emits a non-overridable contrast CI gate', async () => {
+    expect(result.files).toContain('.github/workflows/contrast.yml');
+    const workflow = await readFile(join(outDir, '.github/workflows/contrast.yml'), 'utf8');
+    expect(workflow).toContain('pull_request');
+    expect(workflow).toContain('npx dsg check tokens.yaml');
+    expect(workflow).not.toContain('continue-on-error:');
+  });
+
+  it('emits the source token spec as tokens.yaml', async () => {
+    expect(result.files).toContain('tokens.yaml');
+    const tokensYaml = await readFile(join(outDir, 'tokens.yaml'), 'utf8');
+    expect(tokensYaml).toContain('name: acme');
+    expect(tokensYaml).toContain('#1d4ed8');
+    expect(tokensYaml).not.toContain('computed');
+  });
+
+  it("documents the no-override branch protection setup in the generated README", async () => {
+    const readme = await readFile(join(outDir, 'README.md'), 'utf8');
+    expect(readme).toContain('Enforce the gate (no override)');
+    expect(readme).toContain('gh api');
+    expect(readme).toContain('enforce_admins=true');
+  });
+
   it('writes fallback docs when AI docs are disabled', async () => {
     const docs = await readFile(join(outDir, 'src/Button/Button.docs.md'), 'utf8');
     expect(docs).toContain('# Button');

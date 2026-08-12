@@ -1,0 +1,13 @@
+# Pass fixture — a distinct accessible palette, to prove the gate isn't
+# just special-cased around the example spec's exact colors.
+name: violet-corp
+
+colors:
+  primary: "#6d28d9"
+  background: "#ffffff"
+  surface: "#f5f3ff"
+  text: "#1e1b2e"
+  textMuted: "#4b5563"
+  danger: "#be123c"
+  success: "#047857"
+  warning: "#a16207"

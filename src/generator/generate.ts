@@ -5,11 +5,13 @@ import { renderTokensCss, renderStylesCss } from './css.js';
 import { allTemplates, type ComponentFiles } from './templates.js';
 import {
   renderAxeHelper,
+  renderContrastWorkflow,
   renderGeneratedReadme,
   renderIndexTs,
   renderPackageJson,
   renderStorybookMain,
   renderStorybookPreview,
+  renderTokenSpecYaml,
   renderTsConfig,
   renderVitestConfig,
 } from './scaffold.js';
@@ -54,6 +56,8 @@ export async function generate(
   await write('README.md', renderGeneratedReadme(tokens, components));
   await write('.storybook/main.ts', renderStorybookMain());
   await write('.storybook/preview.ts', renderStorybookPreview());
+  await write('.github/workflows/contrast.yml', renderContrastWorkflow());
+  await write('tokens.yaml', renderTokenSpecYaml(tokens));
   await write('src/tokens.css', renderTokensCss(tokens));
   await write('src/styles.css', renderStylesCss());
   await write('src/index.ts', renderIndexTs(components));
