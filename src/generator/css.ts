@@ -90,6 +90,16 @@ export function renderStylesCss(): string {
   padding: var(--ds-space-3) var(--ds-space-6);
   font-size: var(--ds-font-size-lg);
 }
+.ds-button--icon {
+  padding: var(--ds-space-2);
+  aspect-ratio: 1 / 1;
+}
+.ds-button--icon.ds-button--sm {
+  padding: var(--ds-space-1);
+}
+.ds-button--icon.ds-button--lg {
+  padding: var(--ds-space-3);
+}
 .ds-button--primary {
   background: var(--ds-color-primary);
   color: var(--ds-color-on-primary);

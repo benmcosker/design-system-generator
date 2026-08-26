@@ -896,6 +896,128 @@ describe('Tabs accessibility', () => {
   return { name: 'Tabs', component, story, test };
 }
 
+export function iconButtonTemplate(): ComponentFiles {
+  const component = `${HEADER}import * as React from 'react';
+import '../styles.css';
+
+export interface IconButtonProps
+  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'children'> {
+  icon: React.ReactNode;
+  /** Required — IconButton has no visible text, so this is its only accessible name. */
+  'aria-label': string;
+  variant?: 'primary' | 'secondary' | 'danger';
+  size?: 'sm' | 'md' | 'lg';
+}
+
+/**
+ * Icon-only button. \`aria-label\` is required at the type level so a call
+ * site can't omit it; in dev mode we also catch the one thing TypeScript
+ * can't — an aria-label that's present but empty or whitespace-only.
+ */
+export function IconButton({
+  icon,
+  variant = 'primary',
+  size = 'md',
+  type = 'button',
+  disabled,
+  className,
+  'aria-label': ariaLabel,
+  ...rest
+}: IconButtonProps) {
+  // globalThis-based so this shipped source doesn't require the consumer's
+  // tsconfig to have @types/node just to resolve a bare \`process\` global.
+  const nodeEnv = (globalThis as { process?: { env?: { NODE_ENV?: string } } }).process?.env
+    ?.NODE_ENV;
+  if (nodeEnv !== 'production' && ariaLabel.trim() === '') {
+    console.error('IconButton: aria-label must not be empty — it is this button\\'s only accessible name.');
+  }
+  const classes = [
+    'ds-button',
+    'ds-button--icon',
+    'ds-button--' + variant,
+    'ds-button--' + size,
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
+  return (
+    <button
+      type={type}
+      className={classes}
+      disabled={disabled}
+      aria-label={ariaLabel}
+      {...rest}
+    >
+      <span aria-hidden="true">{icon}</span>
+    </button>
+  );
+}
+`;
+
+  const story = `${HEADER}import type { Meta, StoryObj } from '@storybook/react';
+import { IconButton } from './IconButton';
+
+const trashIcon = (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <path
+      d="M2 4h12M6 4V2h4v2M3 4l1 10h8l1-10"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const meta = {
+  title: 'Components/IconButton',
+  component: IconButton,
+  tags: ['autodocs'],
+  args: { icon: trashIcon, 'aria-label': 'Delete item' },
+} satisfies Meta<typeof IconButton>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Primary: Story = {};
+export const Secondary: Story = { args: { variant: 'secondary' } };
+export const Danger: Story = { args: { variant: 'danger' } };
+export const Small: Story = { args: { size: 'sm' } };
+export const Large: Story = { args: { size: 'lg' } };
+export const Disabled: Story = { args: { disabled: true } };
+`;
+
+  const test = axeTest(
+    'IconButton',
+    `  const trashIcon = (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path
+        d="M2 4h12M6 4V2h4v2M3 4l1 10h8l1-10"
+        stroke="currentColor"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+
+  it('has no axe violations with a valid aria-label', async () => {
+    const { container } = render(
+      <main>
+        <IconButton icon={trashIcon} aria-label="Delete item" />
+        <IconButton icon={trashIcon} aria-label="Delete item" variant="secondary" />
+        <IconButton icon={trashIcon} aria-label="Delete item" variant="danger" />
+        <IconButton icon={trashIcon} aria-label="Delete item" disabled />
+      </main>,
+    );
+    await expectNoAxeViolations(container);
+  });
+`,
+  );
+
+  return { name: 'IconButton', component, story, test };
+}
+
 export function allTemplates(_tokens: ResolvedTokens): ComponentFiles[] {
   return [
     buttonTemplate(),
@@ -907,5 +1029,6 @@ export function allTemplates(_tokens: ResolvedTokens): ComponentFiles[] {
     radioGroupTemplate(),
     selectTemplate(),
     tabsTemplate(),
+    iconButtonTemplate(),
   ];
 }
