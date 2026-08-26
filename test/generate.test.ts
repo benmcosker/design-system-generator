@@ -45,6 +45,7 @@ describe('generate', () => {
       'Select',
       'Tabs',
       'IconButton',
+      'Heading',
     ]);
     for (const name of result.components) {
       expect(result.files).toContain(`src/${name}/${name}.tsx`);
@@ -59,6 +60,8 @@ describe('generate', () => {
     expect(css).toContain('--ds-color-primary: #1d4ed8;');
     expect(css).toContain('--ds-color-on-primary: #ffffff;');
     expect(css).toContain('--ds-focus-ring-width: 3px;');
+    expect(css).toContain('--ds-font-size-2xl:');
+    expect(css).toContain('--ds-font-size-3xl:');
   });
 
   it('generates a Button with a real button element and busy state', async () => {
@@ -122,6 +125,11 @@ describe('generate', () => {
     expect(iconButton).toContain("'aria-label': string;");
     expect(iconButton).not.toContain("'aria-label'?: string;");
     expect(iconButton).toContain('aria-label={ariaLabel}');
+  });
+
+  it('generates a Heading rendering the matching native h1-h6 element', async () => {
+    const heading = await readFile(join(outDir, 'src/Heading/Heading.tsx'), 'utf8');
+    expect(heading).toContain("React.createElement('h' + level");
   });
 
   it('emits an axe-core test per component', async () => {

@@ -3,7 +3,7 @@ import type { ResolvedTokens } from '../tokens/schema.js';
 /** Emit the token layer as CSS custom properties. */
 export function renderTokensCss(tokens: ResolvedTokens): string {
   const { colors, typography, spacing, radius, focus, computed } = tokens;
-  const sizes = ['sm', 'base', 'lg', 'xl'] as const;
+  const sizes = ['sm', 'base', 'lg', 'xl', '2xl', '3xl'] as const;
   const fontSizes = sizes
     .map((label, i) => {
       const px = Math.round(typography.baseSizePx * Math.pow(typography.scale, i - 1));
@@ -343,6 +343,31 @@ export function renderStylesCss(): string {
 .ds-tabs__panel {
   padding: var(--ds-space-4) 0;
   color: var(--ds-color-text);
+}
+
+.ds-heading {
+  font-family: var(--ds-font-family);
+  font-weight: 700;
+  color: var(--ds-color-text);
+  margin: 0;
+}
+.ds-heading--1 {
+  font-size: var(--ds-font-size-3xl);
+}
+.ds-heading--2 {
+  font-size: var(--ds-font-size-2xl);
+}
+.ds-heading--3 {
+  font-size: var(--ds-font-size-xl);
+}
+.ds-heading--4 {
+  font-size: var(--ds-font-size-lg);
+}
+.ds-heading--5 {
+  font-size: var(--ds-font-size-base);
+}
+.ds-heading--6 {
+  font-size: var(--ds-font-size-sm);
 }
 `;
 }
