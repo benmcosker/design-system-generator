@@ -44,6 +44,7 @@ describe('generate', () => {
       'RadioGroup',
       'Select',
       'Tabs',
+      'IconButton',
     ]);
     for (const name of result.components) {
       expect(result.files).toContain(`src/${name}/${name}.tsx`);
@@ -114,6 +115,13 @@ describe('generate', () => {
     expect(tabs).toContain('role="tabpanel"');
     expect(tabs).toContain('aria-selected');
     expect(tabs).toContain("tabIndex={isActive ? 0 : -1}");
+  });
+
+  it('generates an IconButton with a required, non-optional aria-label prop', async () => {
+    const iconButton = await readFile(join(outDir, 'src/IconButton/IconButton.tsx'), 'utf8');
+    expect(iconButton).toContain("'aria-label': string;");
+    expect(iconButton).not.toContain("'aria-label'?: string;");
+    expect(iconButton).toContain('aria-label={ariaLabel}');
   });
 
   it('emits an axe-core test per component', async () => {
