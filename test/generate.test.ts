@@ -43,6 +43,7 @@ describe('generate', () => {
       'Switch',
       'RadioGroup',
       'Select',
+      'Tabs',
     ]);
     for (const name of result.components) {
       expect(result.files).toContain(`src/${name}/${name}.tsx`);
@@ -106,6 +107,15 @@ describe('generate', () => {
     expect(select).toContain('aria-invalid');
   });
 
+  it('generates Tabs with the WAI-ARIA tablist/tab/tabpanel roles and roving tabindex', async () => {
+    const tabs = await readFile(join(outDir, 'src/Tabs/Tabs.tsx'), 'utf8');
+    expect(tabs).toContain('role="tablist"');
+    expect(tabs).toContain('role="tab"');
+    expect(tabs).toContain('role="tabpanel"');
+    expect(tabs).toContain('aria-selected');
+    expect(tabs).toContain("tabIndex={isActive ? 0 : -1}");
+  });
+
   it('emits an axe-core test per component', async () => {
     const test = await readFile(join(outDir, 'src/Badge/Badge.test.tsx'), 'utf8');
     expect(test).toContain('expectNoAxeViolations');
@@ -117,6 +127,7 @@ describe('generate', () => {
     expect(pkg.scripts.test).toBe('vitest run');
     expect(pkg.scripts.storybook).toContain('storybook dev');
     expect(pkg.devDependencies['axe-core']).toBeDefined();
+    expect(pkg.devDependencies['@testing-library/user-event']).toBeDefined();
   });
 
   it('emits a package.json with the contrast check script and the generator as a devDependency', async () => {

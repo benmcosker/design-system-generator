@@ -67,7 +67,8 @@ export function renderStylesCss(): string {
 .ds-checkbox__input:focus-visible,
 .ds-switch__input:focus-visible,
 .ds-radio-group__input:focus-visible,
-.ds-select:focus-visible {
+.ds-select:focus-visible,
+.ds-tabs__tab:focus-visible {
   outline: var(--ds-focus-ring-width) solid var(--ds-focus-ring-color);
   outline-offset: 2px;
 }
@@ -302,6 +303,36 @@ export function renderStylesCss(): string {
   accent-color: var(--ds-color-primary);
   width: 1rem;
   height: 1rem;
+}
+
+.ds-tabs {
+  font-family: var(--ds-font-family);
+}
+.ds-tabs__list {
+  display: flex;
+  gap: var(--ds-space-2);
+  border-bottom: 2px solid var(--ds-color-surface);
+}
+.ds-tabs__tab {
+  appearance: none;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  padding: var(--ds-space-2) var(--ds-space-3);
+  font-family: var(--ds-font-family);
+  font-size: var(--ds-font-size-base);
+  font-weight: 600;
+  color: var(--ds-color-text-muted);
+  cursor: pointer;
+}
+.ds-tabs__tab[aria-selected='true'] {
+  color: var(--ds-color-text);
+  border-bottom-color: var(--ds-color-primary);
+}
+.ds-tabs__panel {
+  padding: var(--ds-space-4) 0;
+  color: var(--ds-color-text);
 }
 `;
 }

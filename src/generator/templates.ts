@@ -713,6 +713,189 @@ export const WithError: Story = { args: { error: 'Select a country to continue.'
   return { name: 'Select', component, story, test };
 }
 
+export function tabsTemplate(): ComponentFiles {
+  const component = `${HEADER}import * as React from 'react';
+import '../styles.css';
+
+export interface TabItem {
+  id: string;
+  label: string;
+  content: React.ReactNode;
+}
+
+export interface TabsProps {
+  /** Accessible name for the tablist itself. */
+  label: string;
+  items: TabItem[];
+  activeId?: string;
+  defaultActiveId?: string;
+  onChange?: (id: string) => void;
+}
+
+const ARROW_KEYS = ['ArrowLeft', 'ArrowRight', 'Home', 'End'];
+
+/**
+ * WAI-ARIA APG tabs pattern with automatic activation: arrow keys move
+ * focus *and* selection together. Only the active tab sits in the Tab
+ * order (roving tabIndex) — arrow keys, not Tab, move between tabs.
+ */
+export function Tabs({ label, items, activeId, defaultActiveId, onChange }: TabsProps) {
+  const base = React.useId();
+  const [internalActiveId, setInternalActiveId] = React.useState(
+    defaultActiveId ?? items[0]?.id,
+  );
+  const currentId = activeId ?? internalActiveId;
+  const tabRefs = React.useRef<Record<string, HTMLButtonElement | null>>({});
+
+  const selectTab = (id: string) => {
+    if (activeId === undefined) {
+      setInternalActiveId(id);
+    }
+    onChange?.(id);
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (!ARROW_KEYS.includes(event.key)) return;
+    const currentIndex = items.findIndex((item) => item.id === currentId);
+    if (currentIndex === -1) return;
+
+    let nextIndex: number;
+    if (event.key === 'ArrowRight') {
+      nextIndex = (currentIndex + 1) % items.length;
+    } else if (event.key === 'ArrowLeft') {
+      nextIndex = (currentIndex - 1 + items.length) % items.length;
+    } else if (event.key === 'Home') {
+      nextIndex = 0;
+    } else {
+      nextIndex = items.length - 1;
+    }
+
+    event.preventDefault();
+    const next = items[nextIndex];
+    if (!next) return;
+    selectTab(next.id);
+    tabRefs.current[next.id]?.focus();
+  };
+
+  return (
+    <div className="ds-tabs">
+      <div
+        className="ds-tabs__list"
+        role="tablist"
+        aria-label={label}
+        onKeyDown={handleKeyDown}
+      >
+        {items.map((item) => {
+          const isActive = item.id === currentId;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              ref={(el) => {
+                tabRefs.current[item.id] = el;
+              }}
+              id={base + '-tab-' + item.id}
+              className="ds-tabs__tab"
+              role="tab"
+              aria-selected={isActive}
+              aria-controls={base + '-panel-' + item.id}
+              tabIndex={isActive ? 0 : -1}
+              onClick={() => selectTab(item.id)}
+            >
+              {item.label}
+            </button>
+          );
+        })}
+      </div>
+      {items.map((item) => {
+        const isActive = item.id === currentId;
+        return (
+          <div
+            key={item.id}
+            className="ds-tabs__panel"
+            role="tabpanel"
+            id={base + '-panel-' + item.id}
+            aria-labelledby={base + '-tab-' + item.id}
+            tabIndex={0}
+            hidden={!isActive}
+          >
+            {item.content}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+`;
+
+  const story = `${HEADER}import type { Meta, StoryObj } from '@storybook/react';
+import { Tabs } from './Tabs';
+
+const items = [
+  { id: 'account', label: 'Account', content: 'Update your account details.' },
+  { id: 'billing', label: 'Billing', content: 'Manage payment methods and invoices.' },
+  { id: 'notifications', label: 'Notifications', content: 'Choose what you get notified about.' },
+];
+
+const meta = {
+  title: 'Components/Tabs',
+  component: Tabs,
+  tags: ['autodocs'],
+  args: { label: 'Settings', items },
+} satisfies Meta<typeof Tabs>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
+export const BillingActive: Story = { args: { defaultActiveId: 'billing' } };
+`;
+
+  const test = `${HEADER}import { afterEach, describe, expect, it } from 'vitest';
+import { cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { expectNoAxeViolations } from '../testing/axe';
+import { Tabs } from './Tabs';
+
+afterEach(cleanup);
+
+const items = [
+  { id: 'account', label: 'Account', content: 'Account panel' },
+  { id: 'billing', label: 'Billing', content: 'Billing panel' },
+  { id: 'notifications', label: 'Notifications', content: 'Notifications panel' },
+];
+
+describe('Tabs accessibility', () => {
+  it('has no axe violations in the default state', async () => {
+    const { container } = render(<Tabs label="Settings" items={items} />);
+    await expectNoAxeViolations(container);
+  });
+
+  it('moves focus and selection with ArrowRight, including wrap at the end', async () => {
+    const user = userEvent.setup();
+    const { container } = render(<Tabs label="Settings" items={items} />);
+
+    await user.tab();
+    expect(document.activeElement).toBe(screen.getByRole('tab', { name: 'Account' }));
+
+    await user.keyboard('{ArrowRight}{ArrowRight}');
+    const notifications = screen.getByRole('tab', { name: 'Notifications' });
+    expect(document.activeElement).toBe(notifications);
+    expect(notifications.getAttribute('aria-selected')).toBe('true');
+
+    await user.keyboard('{ArrowRight}');
+    const account = screen.getByRole('tab', { name: 'Account' });
+    expect(document.activeElement).toBe(account);
+    expect(account.getAttribute('aria-selected')).toBe('true');
+
+    await expectNoAxeViolations(container);
+  });
+});
+`;
+
+  return { name: 'Tabs', component, story, test };
+}
+
 export function allTemplates(_tokens: ResolvedTokens): ComponentFiles[] {
   return [
     buttonTemplate(),
@@ -723,5 +906,6 @@ export function allTemplates(_tokens: ResolvedTokens): ComponentFiles[] {
     switchTemplate(),
     radioGroupTemplate(),
     selectTemplate(),
+    tabsTemplate(),
   ];
 }
