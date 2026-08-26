@@ -50,6 +50,7 @@ export function renderPackageJson(tokens: ResolvedTokens): string {
         '@storybook/react-vite': '^8.6.0',
         '@testing-library/dom': '^10.4.0',
         '@testing-library/react': '^16.2.0',
+        '@testing-library/user-event': '^14.5.0',
         '@types/react': '^18.3.0',
         '@types/react-dom': '^18.3.0',
         'axe-core': '^4.10.0',
