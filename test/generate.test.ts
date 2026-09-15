@@ -46,6 +46,10 @@ describe('generate', () => {
       'Tabs',
       'IconButton',
       'Heading',
+      'Accordion',
+      'Tooltip',
+      'Dialog',
+      'Toast',
     ]);
     for (const name of result.components) {
       expect(result.files).toContain(`src/${name}/${name}.tsx`);
@@ -130,6 +134,36 @@ describe('generate', () => {
   it('generates a Heading rendering the matching native h1-h6 element', async () => {
     const heading = await readFile(join(outDir, 'src/Heading/Heading.tsx'), 'utf8');
     expect(heading).toContain("React.createElement('h' + level");
+  });
+
+  it('generates an Accordion using native details/summary, not hand-rolled ARIA disclosure', async () => {
+    const accordion = await readFile(join(outDir, 'src/Accordion/Accordion.tsx'), 'utf8');
+    expect(accordion).toContain('<details');
+    expect(accordion).toContain('<summary');
+    expect(accordion).not.toContain('role="region"');
+    expect(accordion).not.toContain('aria-expanded');
+  });
+
+  it('generates a Dialog on the native <dialog> element with showModal and aria-labelledby', async () => {
+    const dialog = await readFile(join(outDir, 'src/Dialog/Dialog.tsx'), 'utf8');
+    expect(dialog).toContain('<dialog');
+    expect(dialog).toContain('showModal');
+    expect(dialog).toContain('aria-labelledby');
+  });
+
+  it('generates a Toast module exporting ToastProvider/useToast instead of a default Toast/ToastProps pair', async () => {
+    const toast = await readFile(join(outDir, 'src/Toast/Toast.tsx'), 'utf8');
+    expect(toast).toContain('export function ToastProvider');
+    expect(toast).toContain('export function useToast');
+    expect(toast).not.toContain('export function Toast(');
+  });
+
+  it('emits the ToastProvider/useToast export line in src/index.ts instead of the standard pattern', async () => {
+    const index = await readFile(join(outDir, 'src/index.ts'), 'utf8');
+    expect(index).toContain(
+      "export { ToastProvider, useToast, type ToastOptions } from './Toast/Toast';",
+    );
+    expect(index).not.toContain("export { Toast, type ToastProps }");
   });
 
   it('emits an axe-core test per component', async () => {
