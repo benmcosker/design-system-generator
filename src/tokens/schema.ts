@@ -24,6 +24,22 @@ export const tokenSpecSchema = z.object({
     danger: hexColor,
     success: hexColor,
     warning: hexColor,
+    // Optional palette slots used by the shadcn target. Each defaults from
+    // the colors above in resolveTokens(), so existing specs are unaffected.
+    secondary: hexColor.optional(),
+    accent: hexColor.optional(),
+    muted: hexColor.optional(),
+    border: hexColor.optional(),
+    input: hexColor.optional(),
+    chart: z.array(hexColor).min(1).max(5).optional(),
+    // Optional label-color overrides. When set they replace bestTextOn() and
+    // are contrast-checked against the same fill.
+    onPrimary: hexColor.optional(),
+    onDanger: hexColor.optional(),
+    onSuccess: hexColor.optional(),
+    onWarning: hexColor.optional(),
+    onSecondary: hexColor.optional(),
+    onAccent: hexColor.optional(),
   }),
   typography: z
     .object({
@@ -57,6 +73,9 @@ export const tokenSpecSchema = z.object({
 
 export type TokenSpec = z.infer<typeof tokenSpecSchema>;
 
+/** Which output `dsg generate` produces; it also selects the contrast pairs checked. */
+export type Target = 'react' | 'shadcn';
+
 /**
  * Token spec plus values the generator computes: readable foreground
  * colors for each filled surface, and the resolved focus-ring color.
@@ -68,5 +87,15 @@ export interface ResolvedTokens extends TokenSpec {
     onSuccess: string;
     onWarning: string;
     focusRingColor: string;
+    onSecondary: string;
+    onAccent: string;
+    onMuted: string;
+    /** Optional palette slots, resolved to their defaults when not set. */
+    secondary: string;
+    accent: string;
+    muted: string;
+    border: string;
+    input: string;
+    chart: string[];
   };
 }

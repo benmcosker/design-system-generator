@@ -30,3 +30,24 @@ describe('contrast fixtures matrix', () => {
     });
   }
 });
+
+describe('shadcn fixtures matrix (--target shadcn)', () => {
+  const shadcnDir = join(here, 'fixtures', 'shadcn');
+  const pass = readdirSync(join(shadcnDir, 'pass'));
+  const fail = readdirSync(join(shadcnDir, 'fail'));
+
+  for (const file of pass) {
+    it(`resolves pass/${file} for the shadcn target`, async () => {
+      const spec = await parseTokenFile(join(shadcnDir, 'pass', file));
+      expect(() => resolveTokens(spec, { target: 'shadcn' })).not.toThrow();
+    });
+  }
+
+  for (const file of fail) {
+    it(`rejects fail/${file} for the shadcn target but not for react`, async () => {
+      const spec = await parseTokenFile(join(shadcnDir, 'fail', file));
+      expect(() => resolveTokens(spec, { target: 'shadcn' })).toThrowError(AccessibilityError);
+      expect(() => resolveTokens(spec)).not.toThrow();
+    });
+  }
+});

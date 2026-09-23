@@ -1,0 +1,13 @@
+# Fail fixture: a pure-red primary on black. bestTextOn() picks #111827 for the
+# button label, which is 4.44:1 on #ff0000, just under 4.5:1.
+name: crimson
+
+colors:
+  primary: "#ff0000"
+  background: "#000000"
+  surface: "#0e0e0e"
+  text: "#ffffff"
+  textMuted: "#c8c8c8"
+  danger: "#ff0000"
+  success: "#4ade80"
+  warning: "#fbbf24"

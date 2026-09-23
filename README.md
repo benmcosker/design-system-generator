@@ -67,6 +67,12 @@ Specs are validated with [zod](https://github.com/colinhacks/zod), and readable
 "on-colors" (e.g. the label color for a primary button) are computed
 automatically from your palette.
 
+To pick a label color yourself, set an override: `onPrimary`, `onDanger`,
+`onSuccess`, `onWarning` (and `onSecondary`, `onAccent` for the shadcn target).
+Overrides are contrast-checked like computed labels. They're useful for saturated
+brand colors: `#ff0000` fails with the computed `#111827` label (4.44:1) but passes
+with `onPrimary: "#000000"` (5.25:1).
+
 ### What happens with an inaccessible palette?
 
 Generation refuses to proceed and tells you exactly why. Take this spec —
@@ -140,6 +146,33 @@ severity-appropriate live regions, keyboard-visible focus rings.
    system from scratch and runs its axe-core suite on every push, so "generated
    components pass axe-core" is a tested claim, not a README promise.
 
+## Using with shadcn/ui
+
+If your components come from [shadcn/ui](https://ui.shadcn.com), generate a theme
+instead of a component library. The same token spec and the same contrast gate apply,
+plus the extra pairings shadcn uses (muted text on `muted`, labels on `secondary` and
+`accent`, form-field borders, chart colors).
+
+```bash
+dsg generate tokens.yaml --target shadcn -o theme
+```
+
+This writes `theme.css` (shadcn's CSS variables plus the Tailwind v4 `@theme inline`
+bridge), `registry-item.json` (for `npx shadcn add ./theme/registry-item.json`) and a
+README. Optional tokens `secondary`, `accent`, `muted`, `border`, `input` and `chart`
+default from your palette. `border` is a light mix of text into the background, and
+`input` is the lightest mix that reaches 3:1 against it.
+
+Keep the committed theme honest in CI. This fails if someone edits a color by hand:
+
+```bash
+dsg check tokens.yaml --theme app/theme.css
+```
+
+**One caveat:** shadcn components draw focus rings at reduced opacity
+(`focus-visible:ring-ring/50`), which undoes the contrast the check verified. Change
+those classes to full-opacity `ring-ring` in the components you copy in.
+
 ## AI-assisted docs
 
 `--ai-docs` sends each component's *actual generated source* plus the validated
@@ -154,6 +187,7 @@ never blocks on the network.
 ```bash
 npm test           # unit tests: schema, contrast math, generator output
 npm run typecheck
+npm run check:fixtures   # dsg check over the pass/fail fixture matrices
 npm run dev -- generate example/tokens.yaml -o /tmp/out
 ```
 

@@ -1,14 +1,19 @@
 import type { ResolvedTokens } from '../tokens/schema.js';
 
+/** The type ladder shared by every target: `baseSizePx × scale^n`, n = -1…4. */
+export function fontSizeLadder(typography: ResolvedTokens['typography']): Array<[string, number]> {
+  const sizes = ['sm', 'base', 'lg', 'xl', '2xl', '3xl'] as const;
+  return sizes.map((label, i) => [
+    label,
+    Math.round(typography.baseSizePx * Math.pow(typography.scale, i - 1)),
+  ]);
+}
+
 /** Emit the token layer as CSS custom properties. */
 export function renderTokensCss(tokens: ResolvedTokens): string {
   const { colors, typography, spacing, radius, focus, computed } = tokens;
-  const sizes = ['sm', 'base', 'lg', 'xl', '2xl', '3xl'] as const;
-  const fontSizes = sizes
-    .map((label, i) => {
-      const px = Math.round(typography.baseSizePx * Math.pow(typography.scale, i - 1));
-      return `  --ds-font-size-${label}: ${px}px;`;
-    })
+  const fontSizes = fontSizeLadder(typography)
+    .map(([label, px]) => `  --ds-font-size-${label}: ${px}px;`)
     .join('\n');
   const spaces = [1, 2, 3, 4, 6, 8]
     .map((step) => `  --ds-space-${step}: ${step * spacing.unitPx}px;`)
