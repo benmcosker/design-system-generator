@@ -40,6 +40,35 @@ export function bestTextOn(background: string): string {
   return contrastRatio(background, dark) >= contrastRatio(background, light) ? dark : light;
 }
 
+/**
+ * Linear mix of two hex colors in sRGB: t = 0 returns `from`, t = 1 returns `to`.
+ * Channels are rounded to the nearest integer.
+ */
+export function mixHex(from: string, to: string, t: number): string {
+  const a = hexToRgb(from);
+  const b = hexToRgb(to);
+  return (
+    '#' +
+    a
+      .map((channel, i) => Math.round(channel + (b[i]! - channel) * t))
+      .map((channel) => channel.toString(16).padStart(2, '0'))
+      .join('')
+  );
+}
+
+/**
+ * The mix of `from` toward `to` closest to `from` (smallest t, in 1% steps)
+ * whose contrast against `against` reaches `ratio`. Falls back to `to` when
+ * no mix gets there.
+ */
+export function firstMixMeeting(from: string, to: string, against: string, ratio: number): string {
+  for (let step = 0; step <= 100; step++) {
+    const candidate = mixHex(from, to, step / 100);
+    if (contrastRatio(candidate, against) >= ratio) return candidate;
+  }
+  return to;
+}
+
 export interface ContrastIssue {
   pair: string;
   foreground: string;

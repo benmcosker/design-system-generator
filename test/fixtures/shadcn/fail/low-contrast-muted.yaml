@@ -1,0 +1,14 @@
+# Fail fixture (shadcn target only): shadcn puts muted text on the `muted`
+# fill. #475569 on #94a3b8 is well under 4.5:1. The react target passes this.
+name: acme-muted
+
+colors:
+  primary: "#1d4ed8"
+  background: "#ffffff"
+  surface: "#f8fafc"
+  text: "#0f172a"
+  textMuted: "#475569"
+  danger: "#b91c1c"
+  success: "#15803d"
+  warning: "#b45309"
+  muted: "#94a3b8"

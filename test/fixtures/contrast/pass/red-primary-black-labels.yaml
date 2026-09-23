@@ -1,0 +1,15 @@
+# Pass fixture: the same palette with black labels set explicitly.
+# #000000 on #ff0000 is 5.25:1. Overrides are contrast-checked like computed labels.
+name: crimson
+
+colors:
+  primary: "#ff0000"
+  background: "#000000"
+  surface: "#0e0e0e"
+  text: "#ffffff"
+  textMuted: "#c8c8c8"
+  danger: "#ff0000"
+  success: "#4ade80"
+  warning: "#fbbf24"
+  onPrimary: "#000000"
+  onDanger: "#000000"

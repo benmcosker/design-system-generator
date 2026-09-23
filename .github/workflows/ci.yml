@@ -37,6 +37,25 @@ jobs:
       - name: Check fixtures matrix (pass fixtures pass, fail fixtures fail)
         run: npm run check:fixtures
 
+  shadcn-theme:
+    name: shadcn theme builds
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Generate the shadcn theme from example tokens
+        run: node dist/cli.js generate example/tokens.yaml --target shadcn -o generated-shadcn
+      - name: Drift check (theme matches tokens)
+        run: node dist/cli.js check example/tokens.yaml --theme generated-shadcn/theme.css
+      - name: Compile the theme with Tailwind v4 and assert the utilities exist
+        run: npm run check:shadcn-tailwind -- generated-shadcn/theme.css
+
   generated-a11y:
     name: Generated components pass axe-core
     runs-on: ubuntu-latest

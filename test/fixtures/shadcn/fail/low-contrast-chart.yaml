@@ -1,0 +1,13 @@
+# Fail fixture (shadcn target only): a chart color needs 3:1 against the page.
+name: acme-chart
+
+colors:
+  primary: "#1d4ed8"
+  background: "#ffffff"
+  surface: "#f8fafc"
+  text: "#0f172a"
+  textMuted: "#475569"
+  danger: "#b91c1c"
+  success: "#15803d"
+  warning: "#b45309"
+  chart: ["#1d4ed8", "#e5e7eb"]

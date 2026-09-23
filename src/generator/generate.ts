@@ -1,6 +1,6 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import type { ResolvedTokens } from '../tokens/schema.js';
+import type { ResolvedTokens, Target } from '../tokens/schema.js';
 import { renderTokensCss, renderStylesCss } from './css.js';
 import { allTemplates, type ComponentFiles } from './templates.js';
 import {
@@ -16,11 +16,16 @@ import {
   renderVitestConfig,
 } from './scaffold.js';
 import { fallbackDocs, generateAiDocs } from '../ai/docs.js';
+import { renderShadcnReadme, renderShadcnRegistryItem, renderShadcnThemeCss } from './shadcn.js';
 
 export interface GenerateOptions {
   outDir: string;
   /** When true, docs are written by the Claude API; otherwise a static fallback. */
   aiDocs?: boolean;
+  /** `react` (default): a component library. `shadcn`: a shadcn/ui + Tailwind v4 theme. */
+  target?: Target;
+  /** Token file name, shown in the shadcn theme's header and README. */
+  source?: string;
   log?: (message: string) => void;
 }
 
@@ -36,8 +41,6 @@ export async function generate(
 ): Promise<GenerateResult> {
   const log = options.log ?? (() => {});
   const out = options.outDir;
-  const src = join(out, 'src');
-  const components = allTemplates(tokens);
   const files: string[] = [];
 
   const write = async (relPath: string, content: string) => {
@@ -48,6 +51,20 @@ export async function generate(
     log(`  wrote ${relPath}`);
   };
 
+  if (options.target === 'shadcn') {
+    if (options.aiDocs) {
+      throw new Error('--ai-docs is not supported with --target shadcn (there are no components to document).');
+    }
+    const renderOptions = { source: options.source };
+    await mkdir(out, { recursive: true });
+    await write('theme.css', renderShadcnThemeCss(tokens, renderOptions));
+    await write('registry-item.json', renderShadcnRegistryItem(tokens));
+    await write('README.md', renderShadcnReadme(tokens, renderOptions));
+    return { outDir: out, components: [], files };
+  }
+
+  const src = join(out, 'src');
+  const components = allTemplates(tokens);
   await mkdir(src, { recursive: true });
 
   await write('package.json', renderPackageJson(tokens));
