@@ -84,12 +84,12 @@ exports[`shadcn emitter > emits every mapped variable exactly once, plus the Tai
   --radius-md: 8px;
   --radius-lg: 16px;
   --font-sans: 'Inter', system-ui, sans-serif;
-  --text-sm: 13px;
-  --text-base: 16px;
-  --text-lg: 20px;
-  --text-xl: 25px;
-  --text-2xl: 31px;
-  --text-3xl: 39px;
+  --text-sm: 0.8125rem;
+  --text-base: 1rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5625rem;
+  --text-2xl: 1.9375rem;
+  --text-3xl: 2.4375rem;
   --spacing: 4px;
 }
 "

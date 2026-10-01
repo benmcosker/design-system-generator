@@ -88,6 +88,35 @@ describe('generate', () => {
     expect(alert).toContain(`tone === 'danger' ? 'alert' : 'status'`);
   });
 
+  it('conveys Alert tone with an icon and a screen-reader word, not color alone', async () => {
+    const alert = await readFile(join(outDir, 'src/Alert/Alert.tsx'), 'utf8');
+    expect(alert).toContain('ds-alert__icon');
+    expect(alert).toContain('ds-visually-hidden');
+    expect(alert).toContain("danger: 'Error: '");
+    expect(alert).toContain('aria-hidden="true"');
+  });
+
+  it('conveys Toast tone with an icon and a screen-reader word, not color alone', async () => {
+    const toast = await readFile(join(outDir, 'src/Toast/Toast.tsx'), 'utf8');
+    expect(toast).toContain('ds-toast__icon');
+    expect(toast).toContain('ds-visually-hidden');
+    expect(toast).toContain("warning: 'Warning: '");
+  });
+
+  it('leaves Badge unchanged — its text already differs per tone (WCAG 1.4.1)', async () => {
+    const badge = await readFile(join(outDir, 'src/Badge/Badge.tsx'), 'utf8');
+    // Badge must NOT gain the status affordance; its own text carries the state.
+    expect(badge).not.toContain('ds-visually-hidden');
+    expect(badge).not.toContain('STATUS_ICONS');
+  });
+
+  it('forwards a documented autoComplete on TextField and Select (WCAG 1.3.5)', async () => {
+    const field = await readFile(join(outDir, 'src/TextField/TextField.tsx'), 'utf8');
+    expect(field).toContain("autoComplete?: React.InputHTMLAttributes<HTMLInputElement>['autoComplete']");
+    const select = await readFile(join(outDir, 'src/Select/Select.tsx'), 'utf8');
+    expect(select).toContain("autoComplete?: React.SelectHTMLAttributes<HTMLSelectElement>['autoComplete']");
+  });
+
   it('generates a Checkbox with a wired label and optional description', async () => {
     const checkbox = await readFile(join(outDir, 'src/Checkbox/Checkbox.tsx'), 'utf8');
     expect(checkbox).toContain("type=\"checkbox\"");

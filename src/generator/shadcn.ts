@@ -1,5 +1,5 @@
 import type { ResolvedTokens } from '../tokens/schema.js';
-import { fontSizeLadder } from './css.js';
+import { fontSizeLadder, remFromPx } from './css.js';
 
 /**
  * The shadcn/ui target: a Tailwind v4 theme generated from the token spec.
@@ -65,7 +65,10 @@ export function shadcnThemeVars(tokens: ResolvedTokens): Array<[string, string]>
     ['radius-md', radius.md],
     ['radius-lg', radius.lg],
     ['font-sans', typography.fontFamily],
-    ...fontSizeLadder(typography).map(([label, px]): [string, string] => [`text-${label}`, `${px}px`]),
+    ...fontSizeLadder(typography).map(([label, px]): [string, string] => [
+      `text-${label}`,
+      remFromPx(px),
+    ]),
     ['spacing', `${spacing.unitPx}px`],
   ];
 }

@@ -146,6 +146,25 @@ severity-appropriate live regions, keyboard-visible focus rings.
    system from scratch and runs its axe-core suite on every push, so "generated
    components pass axe-core" is a tested claim, not a README promise.
 
+Beyond contrast, the generated components also ship these built-in guarantees:
+
+- **Touch targets** (WCAG 2.5.8) — every interactive control renders with at
+  least a 24×24px hit area.
+- **Reduced motion** (WCAG 2.3.3) — all transitions collapse under
+  `prefers-reduced-motion: reduce`.
+- **Scalable text** (WCAG 1.4.4) — font sizes are emitted in `rem`, so they
+  scale with the reader's browser text-size setting.
+- **Status not by color alone** (WCAG 1.4.1) — `Alert` and `Toast` convey tone
+  with an icon and a screen-reader severity word, not just the border color.
+- **Input purpose** (WCAG 1.3.5) — `TextField` and `Select` forward an
+  `autoComplete` token verbatim. **Set it on every field that collects
+  information about the user** (e.g. `autoComplete="email"`), so browsers and
+  assistive tech can fill it:
+
+  ```tsx
+  <TextField label="Email address" type="email" autoComplete="email" />
+  ```
+
 ## Using with shadcn/ui
 
 If your components come from [shadcn/ui](https://ui.shadcn.com), generate a theme
