@@ -9,11 +9,23 @@ export function fontSizeLadder(typography: ResolvedTokens['typography']): Array<
   ]);
 }
 
+/** The CSS initial root font size, in px. */
+const ROOT_FONT_PX = 16;
+
+/**
+ * Convert a px size to a trimmed `rem` string (20 → "1.25rem", 16 → "1rem").
+ * Font sizes are emitted in rem so they scale with the user's browser text-size
+ * setting (WCAG 1.4.4 Resize Text); px at the default root size is unchanged.
+ */
+export function remFromPx(px: number): string {
+  return `${parseFloat((px / ROOT_FONT_PX).toFixed(4))}rem`;
+}
+
 /** Emit the token layer as CSS custom properties. */
 export function renderTokensCss(tokens: ResolvedTokens): string {
   const { colors, typography, spacing, radius, focus, computed } = tokens;
   const fontSizes = fontSizeLadder(typography)
-    .map(([label, px]) => `  --ds-font-size-${label}: ${px}px;`)
+    .map(([label, px]) => `  --ds-font-size-${label}: ${remFromPx(px)};`)
     .join('\n');
   const spaces = [1, 2, 3, 4, 6, 8]
     .map((step) => `  --ds-space-${step}: ${step * spacing.unitPx}px;`)
@@ -64,6 +76,7 @@ export function renderStylesCss(): string {
   font-weight: 600;
   border: 2px solid transparent;
   border-radius: var(--ds-radius-md);
+  min-block-size: 24px;
   cursor: pointer;
   transition: filter 120ms ease;
 }
@@ -99,6 +112,8 @@ export function renderStylesCss(): string {
 .ds-button--icon {
   padding: var(--ds-space-2);
   aspect-ratio: 1 / 1;
+  min-inline-size: 24px;
+  min-block-size: 24px;
 }
 .ds-button--icon.ds-button--sm {
   padding: var(--ds-space-1);
@@ -149,6 +164,7 @@ export function renderStylesCss(): string {
   border: 2px solid var(--ds-color-text-muted);
   border-radius: var(--ds-radius-sm);
   padding: var(--ds-space-2) var(--ds-space-3);
+  min-block-size: 24px;
 }
 .ds-input[aria-invalid='true'] {
   border-color: var(--ds-color-danger);
@@ -161,6 +177,7 @@ export function renderStylesCss(): string {
   border: 2px solid var(--ds-color-text-muted);
   border-radius: var(--ds-radius-sm);
   padding: var(--ds-space-2) var(--ds-space-3);
+  min-block-size: 24px;
 }
 .ds-select[aria-invalid='true'] {
   border-color: var(--ds-color-danger);
@@ -225,9 +242,9 @@ export function renderStylesCss(): string {
 }
 .ds-checkbox__input {
   accent-color: var(--ds-color-primary);
-  width: 1rem;
-  height: 1rem;
-  margin-top: 0.2rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-top: 0.05rem;
 }
 .ds-checkbox__label {
   font-size: var(--ds-font-size-base);
@@ -251,8 +268,8 @@ export function renderStylesCss(): string {
 .ds-switch__input {
   appearance: none;
   position: relative;
-  width: 2.25rem;
-  height: 1.25rem;
+  width: 2.75rem;
+  height: 1.5rem;
   flex-shrink: 0;
   margin: 0;
   border-radius: 999px;
@@ -265,8 +282,8 @@ export function renderStylesCss(): string {
   position: absolute;
   top: 2px;
   left: 2px;
-  width: 1rem;
-  height: 1rem;
+  width: 1.25rem;
+  height: 1.25rem;
   border-radius: 50%;
   background: var(--ds-color-background);
   transition: transform 120ms ease;
@@ -275,7 +292,7 @@ export function renderStylesCss(): string {
   background: var(--ds-color-primary);
 }
 .ds-switch__input:checked::after {
-  transform: translateX(1rem);
+  transform: translateX(1.25rem);
 }
 .ds-switch__input:disabled {
   opacity: 0.55;
@@ -317,8 +334,8 @@ export function renderStylesCss(): string {
 }
 .ds-radio-group__input {
   accent-color: var(--ds-color-primary);
-  width: 1rem;
-  height: 1rem;
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 .ds-tabs {
@@ -336,6 +353,7 @@ export function renderStylesCss(): string {
   border-bottom: 2px solid transparent;
   margin-bottom: -2px;
   padding: var(--ds-space-2) var(--ds-space-3);
+  min-block-size: 24px;
   font-family: var(--ds-font-family);
   font-size: var(--ds-font-size-base);
   font-weight: 600;
@@ -387,6 +405,7 @@ export function renderStylesCss(): string {
   cursor: pointer;
   list-style: none;
   padding: var(--ds-space-3) var(--ds-space-1);
+  min-block-size: 24px;
   font-size: var(--ds-font-size-base);
   font-weight: 600;
 }
@@ -499,6 +518,16 @@ export function renderStylesCss(): string {
 .ds-toast__message {
   flex: 1;
   margin: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-button,
+  .ds-switch__input,
+  .ds-switch__input::after,
+  .ds-accordion__summary::before,
+  .ds-tooltip {
+    transition-duration: 0.01ms;
+  }
 }
 `;
 }
