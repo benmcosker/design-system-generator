@@ -228,6 +228,20 @@ export function renderStylesCss(): string {
 .ds-alert--danger {
   border-left-color: var(--ds-color-danger);
 }
+.ds-alert__icon {
+  flex-shrink: 0;
+  display: flex;
+  margin-top: 0.1rem;
+}
+.ds-alert--success .ds-alert__icon {
+  color: var(--ds-color-success);
+}
+.ds-alert--warning .ds-alert__icon {
+  color: var(--ds-color-warning);
+}
+.ds-alert--danger .ds-alert__icon {
+  color: var(--ds-color-danger);
+}
 .ds-alert__title {
   font-weight: 700;
   margin: 0 0 var(--ds-space-1);
@@ -515,9 +529,35 @@ export function renderStylesCss(): string {
 .ds-toast--danger {
   border-left-color: var(--ds-color-danger);
 }
+.ds-toast__icon {
+  flex-shrink: 0;
+  display: flex;
+  margin-top: 0.1rem;
+}
+.ds-toast--success .ds-toast__icon {
+  color: var(--ds-color-success);
+}
+.ds-toast--warning .ds-toast__icon {
+  color: var(--ds-color-warning);
+}
+.ds-toast--danger .ds-toast__icon {
+  color: var(--ds-color-danger);
+}
 .ds-toast__message {
   flex: 1;
   margin: 0;
+}
+
+.ds-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

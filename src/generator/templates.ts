@@ -33,6 +33,42 @@ ${renderCalls}
 `;
 }
 
+/**
+ * Shared status iconography for Alert and Toast (WCAG 1.4.1 Use of Color): a
+ * decorative icon for sighted users plus a visually-hidden severity word for
+ * screen readers, so a non-info tone is never conveyed by color alone. Defined
+ * once here and interpolated into both generated components.
+ */
+const STATUS_AFFORDANCE = `const STATUS_ICONS = {
+  success: (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M3 8.5l3 3 7-7.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  ),
+  warning: (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <path d="M8 1.5l6.5 11.5H1.5L8 1.5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M8 6v3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="8" cy="11" r="0.9" fill="currentColor" />
+    </svg>
+  ),
+  danger: (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+      <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.5" />
+      <path d="M8 4.5v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <circle cx="8" cy="11" r="0.9" fill="currentColor" />
+    </svg>
+  ),
+} as const;
+
+const STATUS_LABELS = {
+  success: 'Success: ',
+  warning: 'Warning: ',
+  danger: 'Error: ',
+} as const;
+
+type StatusTone = keyof typeof STATUS_ICONS;`;
+
 export function buttonTemplate(): ComponentFiles {
   const component = `${HEADER}import * as React from 'react';
 import '../styles.css';
@@ -125,6 +161,13 @@ export interface TextFieldProps
   description?: string;
   /** Validation message. Sets aria-invalid and is announced politely. */
   error?: string;
+  /**
+   * Autocomplete token identifying the field's purpose (e.g. "email", "name",
+   * "current-password"), so browsers and assistive tech can fill it (WCAG 1.3.5
+   * Identify Input Purpose). Forwarded verbatim to the underlying input — set it
+   * on any field that collects information about the user.
+   */
+  autoComplete?: React.InputHTMLAttributes<HTMLInputElement>['autoComplete'];
 }
 
 export function TextField({ label, description, error, required, ...rest }: TextFieldProps) {
@@ -182,6 +225,9 @@ export const WithDescription: Story = {
 export const Required: Story = { args: { required: true } };
 export const WithError: Story = {
   args: { error: 'Enter a valid email address.', defaultValue: 'not-an-email' },
+};
+export const WithAutocomplete: Story = {
+  args: { label: 'Email address', type: 'email', autoComplete: 'email' },
 };
 `;
 
@@ -268,17 +314,31 @@ export interface AlertProps extends React.HTMLAttributes<HTMLDivElement> {
   title?: string;
 }
 
+${STATUS_AFFORDANCE}
+
 /**
  * Danger alerts use role="alert" (assertive) because they demand attention;
  * everything else uses role="status" (polite) to avoid interrupting
  * screen-reader users mid-task.
+ *
+ * Tone is conveyed three ways, never by color alone (WCAG 1.4.1): the border
+ * color, a decorative status icon, and a visually-hidden severity word read by
+ * screen readers (to which color and role convey no severity).
  */
 export function Alert({ tone = 'info', title, className, children, ...rest }: AlertProps) {
   const classes = ['ds-alert', 'ds-alert--' + tone, className].filter(Boolean).join(' ');
   const role = tone === 'danger' ? 'alert' : 'status';
+  const icon = tone === 'info' ? null : STATUS_ICONS[tone as StatusTone];
+  const severity = tone === 'info' ? '' : STATUS_LABELS[tone as StatusTone];
   return (
     <div className={classes} role={role} {...rest}>
+      {icon ? (
+        <span className="ds-alert__icon" aria-hidden="true">
+          {icon}
+        </span>
+      ) : null}
       <div>
+        {severity ? <span className="ds-visually-hidden">{severity}</span> : null}
         {title ? <p className="ds-alert__title">{title}</p> : null}
         {children}
       </div>
@@ -630,6 +690,12 @@ export interface SelectProps
   description?: string;
   /** Validation message. Sets aria-invalid and is announced politely. */
   error?: string;
+  /**
+   * Autocomplete token identifying the field's purpose (e.g. "country",
+   * "honorific-prefix"), so browsers can fill it (WCAG 1.3.5 Identify Input
+   * Purpose). Forwarded verbatim to the underlying select.
+   */
+  autoComplete?: React.SelectHTMLAttributes<HTMLSelectElement>['autoComplete'];
 }
 
 /** A native <select> — full keyboard support and platform picker UI for free. */
@@ -1522,6 +1588,8 @@ const closeIcon = (
   </svg>
 );
 
+${STATUS_AFFORDANCE}
+
 function ToastItem({ toast, onDismiss }: { toast: ToastRecord; onDismiss: () => void }) {
   const timerRef = React.useRef<ReturnType<typeof setTimeout>>();
 
@@ -1541,6 +1609,11 @@ function ToastItem({ toast, onDismiss }: { toast: ToastRecord; onDismiss: () => 
     return clearTimer;
   }, [scheduleTimer]);
 
+  // Tone is conveyed by the border color, a decorative icon, and a
+  // visually-hidden severity word — never by color alone (WCAG 1.4.1).
+  const icon = toast.tone === 'info' ? null : STATUS_ICONS[toast.tone as StatusTone];
+  const severity = toast.tone === 'info' ? '' : STATUS_LABELS[toast.tone as StatusTone];
+
   return (
     <div
       className={'ds-toast ds-toast--' + toast.tone}
@@ -1550,7 +1623,15 @@ function ToastItem({ toast, onDismiss }: { toast: ToastRecord; onDismiss: () => 
       onFocus={clearTimer}
       onBlur={scheduleTimer}
     >
-      <p className="ds-toast__message">{toast.message}</p>
+      {icon ? (
+        <span className="ds-toast__icon" aria-hidden="true">
+          {icon}
+        </span>
+      ) : null}
+      <p className="ds-toast__message">
+        {severity ? <span className="ds-visually-hidden">{severity}</span> : null}
+        {toast.message}
+      </p>
       <IconButton
         icon={closeIcon}
         aria-label="Dismiss notification"
