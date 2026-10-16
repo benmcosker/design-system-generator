@@ -50,6 +50,9 @@ describe('generate', () => {
       'Tooltip',
       'Dialog',
       'Toast',
+      'Listbox',
+      'Menu',
+      'Combobox',
     ]);
     for (const name of result.components) {
       expect(result.files).toContain(`src/${name}/${name}.tsx`);
@@ -178,6 +181,39 @@ describe('generate', () => {
     expect(dialog).toContain('<dialog');
     expect(dialog).toContain('showModal');
     expect(dialog).toContain('aria-labelledby');
+  });
+
+  it('generates Listbox, Menu, and Combobox on the APG roles with the expected ARIA wiring', async () => {
+    const listbox = await readFile(join(outDir, 'src/Listbox/Listbox.tsx'), 'utf8');
+    expect(listbox).toContain('role="listbox"');
+    expect(listbox).toContain('aria-activedescendant');
+    expect(listbox).not.toContain('<select');
+
+    const menu = await readFile(join(outDir, 'src/Menu/Menu.tsx'), 'utf8');
+    expect(menu).toContain('role="menu"');
+    expect(menu).toContain('role="menuitem"');
+    expect(menu).toContain("'aria-haspopup': 'menu'");
+    expect(menu).toContain("'aria-expanded'");
+
+    const combobox = await readFile(join(outDir, 'src/Combobox/Combobox.tsx'), 'utf8');
+    expect(combobox).toContain('role="combobox"');
+    expect(combobox).toContain('aria-autocomplete="list"');
+    expect(combobox).toContain('aria-activedescendant');
+    expect(combobox).toContain('role="status"');
+  });
+
+  it('guards scrollIntoView in every component that uses it (jsdom does not implement it)', async () => {
+    for (const name of ['Listbox', 'Combobox']) {
+      const src = await readFile(join(outDir, `src/${name}/${name}.tsx`), 'utf8');
+      expect(src).toContain('scrollIntoView?.(');
+    }
+  });
+
+  it('uses the standard index export line for the three new components', async () => {
+    const index = await readFile(join(outDir, 'src/index.ts'), 'utf8');
+    for (const name of ['Listbox', 'Menu', 'Combobox']) {
+      expect(index).toContain(`export { ${name}, type ${name}Props } from './${name}/${name}';`);
+    }
   });
 
   it('generates a Toast module exporting ToastProvider/useToast instead of a default Toast/ToastProps pair', async () => {
