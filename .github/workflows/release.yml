@@ -1,8 +1,10 @@
 name: Release
 
+# Manual only: merging to main never publishes. Run this workflow from the
+# Actions tab (on main) when you are ready to cut the release; semantic-release
+# then computes the version from the conventional commits since the last tag.
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -13,6 +15,7 @@ permissions:
 jobs:
   release:
     name: Semantic release
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
