@@ -98,3 +98,31 @@ describe('reduced motion', () => {
     expect(block).toContain('transition-duration: 0.01ms;');
   });
 });
+
+// v2.8.0 — Listbox, Menu, Combobox: interactive classes join the shared
+// :focus-visible list and meet the 24px target size.
+describe('listbox, menu and combobox styles', () => {
+  it('adds the focusable classes to the shared :focus-visible selector list', () => {
+    const list = stylesCss.slice(0, stylesCss.indexOf('{', stylesCss.indexOf('.ds-listbox:focus-visible')));
+    expect(list).toContain('.ds-listbox:focus-visible');
+    expect(list).toContain('.ds-menu__item:focus-visible');
+  });
+
+  it('pins a 24px minimum on options and menu items', () => {
+    for (const selector of ['.ds-listbox__option,', '.ds-menu__item {']) {
+      const block = stylesCss.slice(stylesCss.indexOf(selector));
+      expect(block).toContain('min-block-size: 24px;');
+    }
+  });
+
+  it('conveys the active option by an outline, not background color alone', () => {
+    const block = stylesCss.slice(stylesCss.indexOf('.ds-listbox__option--active,'));
+    expect(block.slice(0, block.indexOf('}'))).toContain('outline:');
+  });
+
+  it('adds no transitions, so nothing needs a reduced-motion override', () => {
+    const start = stylesCss.indexOf('.ds-listbox {');
+    const end = stylesCss.indexOf('.ds-visually-hidden {');
+    expect(stylesCss.slice(start, end)).not.toContain('transition');
+  });
+});

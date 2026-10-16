@@ -87,7 +87,9 @@ export function renderStylesCss(): string {
 .ds-radio-group__input:focus-visible,
 .ds-select:focus-visible,
 .ds-tabs__tab:focus-visible,
-.ds-accordion__summary:focus-visible {
+.ds-accordion__summary:focus-visible,
+.ds-listbox:focus-visible,
+.ds-menu__item:focus-visible {
   outline: var(--ds-focus-ring-width) solid var(--ds-focus-ring-color);
   outline-offset: 2px;
 }
@@ -546,6 +548,117 @@ export function renderStylesCss(): string {
 .ds-toast__message {
   flex: 1;
   margin: 0;
+}
+
+.ds-listbox {
+  list-style: none;
+  margin: 0;
+  padding: var(--ds-space-1);
+  max-width: 40ch;
+  max-height: 16rem;
+  overflow-y: auto;
+  font-family: var(--ds-font-family);
+  font-size: var(--ds-font-size-base);
+  color: var(--ds-color-text);
+  background: var(--ds-color-background);
+  border: 1px solid var(--ds-color-text-muted);
+  border-radius: var(--ds-radius-md);
+}
+.ds-listbox__option,
+.ds-combobox__option {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-space-2);
+  min-block-size: 24px;
+  padding: var(--ds-space-2) var(--ds-space-3);
+  border-radius: var(--ds-radius-sm);
+  cursor: pointer;
+}
+.ds-listbox__option[aria-selected='true'],
+.ds-combobox__option[aria-selected='true'] {
+  font-weight: 600;
+}
+.ds-listbox__option[aria-disabled='true'],
+.ds-combobox__option[aria-disabled='true'],
+.ds-menu__item[aria-disabled='true'] {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.ds-listbox__option--active,
+.ds-combobox__option--active {
+  background: var(--ds-color-surface);
+  outline: var(--ds-focus-ring-width) solid var(--ds-focus-ring-color);
+  outline-offset: -2px;
+}
+.ds-listbox__check,
+.ds-combobox__check {
+  display: inline-block;
+  inline-size: 1em;
+}
+
+.ds-menu {
+  position: relative;
+  display: inline-block;
+}
+.ds-menu__list {
+  position: absolute;
+  top: calc(100% + var(--ds-space-1));
+  left: 0;
+  z-index: 10;
+  min-width: 10rem;
+  margin: 0;
+  padding: var(--ds-space-1);
+  list-style: none;
+  font-family: var(--ds-font-family);
+  font-size: var(--ds-font-size-base);
+  color: var(--ds-color-text);
+  background: var(--ds-color-background);
+  border: 1px solid var(--ds-color-text-muted);
+  border-radius: var(--ds-radius-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+.ds-menu__item {
+  display: block;
+  inline-size: 100%;
+  min-block-size: 24px;
+  padding: var(--ds-space-2) var(--ds-space-3);
+  font: inherit;
+  color: inherit;
+  text-align: start;
+  background: transparent;
+  border: 0;
+  border-radius: var(--ds-radius-sm);
+  cursor: pointer;
+}
+.ds-menu__item:hover:not([aria-disabled='true']),
+.ds-menu__item:focus {
+  background: var(--ds-color-surface);
+}
+
+.ds-combobox__control {
+  position: relative;
+}
+.ds-combobox__list {
+  position: absolute;
+  top: calc(100% + var(--ds-space-1));
+  left: 0;
+  right: 0;
+  z-index: 10;
+  margin: 0;
+  padding: var(--ds-space-1);
+  list-style: none;
+  max-height: 16rem;
+  overflow-y: auto;
+  font-size: var(--ds-font-size-base);
+  color: var(--ds-color-text);
+  background: var(--ds-color-background);
+  border: 1px solid var(--ds-color-text-muted);
+  border-radius: var(--ds-radius-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+.ds-combobox__empty {
+  padding: var(--ds-space-2) var(--ds-space-3);
+  color: var(--ds-color-text-muted);
 }
 
 .ds-visually-hidden {

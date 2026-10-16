@@ -1805,6 +1805,1085 @@ describe('Toast auto-dismiss', () => {
   };
 }
 
+/**
+ * Option-navigation helpers shared (inlined) by Listbox, Menu and Combobox.
+ * Generated components are standalone files, so this text is interpolated
+ * into each one rather than imported from a shared runtime module.
+ */
+const OPTION_NAV = `interface Navigable {
+  label: string;
+  disabled?: boolean;
+}
+
+function firstEnabled(items: Navigable[]): number {
+  return items.findIndex((item) => !item.disabled);
+}
+
+function lastEnabled(items: Navigable[]): number {
+  for (let i = items.length - 1; i >= 0; i--) {
+    if (!items[i].disabled) return i;
+  }
+  return -1;
+}
+
+/** Next enabled index in the given direction, or \`from\` when there is none (no wrap). */
+function nextEnabled(items: Navigable[], from: number, step: 1 | -1): number {
+  for (let i = from + step; i >= 0 && i < items.length; i += step) {
+    if (!items[i].disabled) return i;
+  }
+  return from;
+}
+
+/** Like nextEnabled, but wraps around the ends. */
+function wrapEnabled(items: Navigable[], from: number, step: 1 | -1): number {
+  for (let n = 1; n <= items.length; n++) {
+    const i = (((from + step * n) % items.length) + items.length) % items.length;
+    if (!items[i].disabled) return i;
+  }
+  return from;
+}
+
+/** Typeahead: first enabled label starting with the query, searching from the active item. */
+function typeaheadIndex(items: Navigable[], active: number, query: string): number {
+  const start = query.length === 1 ? active + 1 : Math.max(active, 0);
+  for (let n = 0; n < items.length; n++) {
+    const i = (start + n) % items.length;
+    if (!items[i].disabled && items[i].label.toLowerCase().startsWith(query)) return i;
+  }
+  return -1;
+}
+
+function isTypeaheadKey(event: React.KeyboardEvent, bufferActive: boolean): boolean {
+  if (event.ctrlKey || event.metaKey || event.altKey) return false;
+  return event.key.length === 1 && (event.key !== ' ' || bufferActive);
+}`;
+
+export function listboxTemplate(): ComponentFiles {
+  const component = `${HEADER}import * as React from 'react';
+import '../styles.css';
+
+export interface ListOption {
+  value: string;
+  label: string;
+  disabled?: boolean;
+}
+
+export interface ListboxProps {
+  /** Accessible name for the listbox. Required: a listbox has no visible text of its own. */
+  label: string;
+  options: ListOption[];
+  value?: string;
+  defaultValue?: string;
+  onChange?: (value: string) => void;
+}
+
+${OPTION_NAV}
+
+/**
+ * WAI-ARIA APG single-select listbox. DOM focus stays on the list; the
+ * active option is exposed via aria-activedescendant. Arrow keys move the
+ * active option, Enter/Space selects it (selection does not follow focus, so
+ * onChange never fires while exploring). Printable keys do typeahead.
+ */
+export function Listbox({ label, options, value, defaultValue, onChange }: ListboxProps) {
+  const base = React.useId();
+  const [internal, setInternal] = React.useState(defaultValue);
+  const selected = value ?? internal;
+  const [active, setActive] = React.useState(-1);
+  const buffer = React.useRef('');
+  const timer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const optionId = (index: number) => base + '-option-' + index;
+
+  React.useEffect(() => () => clearTimeout(timer.current), []);
+
+  React.useEffect(() => {
+    if (active < 0) return;
+    // scrollIntoView is not implemented in jsdom, so guard the call.
+    document.getElementById(base + '-option-' + active)?.scrollIntoView?.({ block: 'nearest' });
+  }, [active, base]);
+
+  const select = (index: number) => {
+    const option = options[index];
+    if (!option || option.disabled) return;
+    if (value === undefined) setInternal(option.value);
+    onChange?.(option.value);
+  };
+
+  const handleFocus = () => {
+    if (active >= 0) return;
+    const selectedIndex = options.findIndex((o) => o.value === selected && !o.disabled);
+    setActive(selectedIndex >= 0 ? selectedIndex : firstEnabled(options));
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setActive(nextEnabled(options, active, 1));
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setActive(nextEnabled(options, active, -1));
+    } else if (event.key === 'Home') {
+      event.preventDefault();
+      setActive(firstEnabled(options));
+    } else if (event.key === 'End') {
+      event.preventDefault();
+      setActive(lastEnabled(options));
+    } else if (isTypeaheadKey(event, buffer.current !== '')) {
+      event.preventDefault();
+      buffer.current += event.key.toLowerCase();
+      clearTimeout(timer.current);
+      timer.current = setTimeout(() => {
+        buffer.current = '';
+      }, 500);
+      const match = typeaheadIndex(options, active, buffer.current);
+      if (match >= 0) setActive(match);
+    } else if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      select(active);
+    }
+  };
+
+  return (
+    <ul
+      role="listbox"
+      aria-label={label}
+      tabIndex={0}
+      className="ds-listbox"
+      aria-activedescendant={active >= 0 ? optionId(active) : undefined}
+      onFocus={handleFocus}
+      onBlur={() => setActive(-1)}
+      onKeyDown={handleKeyDown}
+    >
+      {options.map((option, index) => {
+        const isSelected = option.value === selected;
+        const classes = [
+          'ds-listbox__option',
+          index === active ? 'ds-listbox__option--active' : null,
+        ]
+          .filter(Boolean)
+          .join(' ');
+        return (
+          <li
+            key={option.value}
+            id={optionId(index)}
+            role="option"
+            aria-selected={isSelected}
+            aria-disabled={option.disabled ? true : undefined}
+            className={classes}
+            onClick={() => {
+              if (option.disabled) return;
+              setActive(index);
+              select(index);
+            }}
+          >
+            <span className="ds-listbox__check" aria-hidden="true">
+              {isSelected ? '✓' : ''}
+            </span>
+            {option.label}
+          </li>
+        );
+      })}
+    </ul>
+  );
+}
+`;
+
+  const story = `${HEADER}import type { Meta, StoryObj } from '@storybook/react';
+import { Listbox } from './Listbox';
+
+const meta = {
+  title: 'Components/Listbox',
+  component: Listbox,
+  tags: ['autodocs'],
+  args: {
+    label: 'Fruit',
+    options: [
+      { value: 'apple', label: 'Apple' },
+      { value: 'banana', label: 'Banana' },
+      { value: 'cherry', label: 'Cherry', disabled: true },
+      { value: 'date', label: 'Date' },
+    ],
+  },
+} satisfies Meta<typeof Listbox>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
+export const WithSelection: Story = { args: { defaultValue: 'banana' } };
+`;
+
+  const test = `${HEADER}import { afterEach, describe, expect, it, vi } from 'vitest';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { expectNoAxeViolations } from '../testing/axe';
+import { Listbox } from './Listbox';
+
+afterEach(cleanup);
+
+const options = [
+  { value: 'apple', label: 'Apple' },
+  { value: 'banana', label: 'Banana' },
+  { value: 'cherry', label: 'Cherry', disabled: true },
+  { value: 'date', label: 'Date' },
+];
+
+describe('Listbox accessibility', () => {
+  it('has no axe violations with a selected and a disabled option', async () => {
+    const { container } = render(
+      <main>
+        <Listbox label="Fruit" options={options} defaultValue="banana" />
+      </main>,
+    );
+    await expectNoAxeViolations(container);
+  });
+
+  it('has no axe violations while focused with an active option', async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <main>
+        <Listbox label="Fruit" options={options} />
+      </main>,
+    );
+    await user.tab();
+    await expectNoAxeViolations(container);
+  });
+});
+
+describe('Listbox keyboard behavior', () => {
+  it('moves the active option with arrows, skips disabled options, and selects with Enter', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<Listbox label="Fruit" options={options} onChange={onChange} />);
+
+    await user.tab();
+    const listbox = screen.getByRole('listbox', { name: 'Fruit' });
+    expect(listbox.getAttribute('aria-activedescendant')).toBe(
+      screen.getByRole('option', { name: 'Apple' }).id,
+    );
+
+    await user.keyboard('{ArrowDown}');
+    expect(listbox.getAttribute('aria-activedescendant')).toBe(
+      screen.getByRole('option', { name: 'Banana' }).id,
+    );
+    expect(onChange).not.toHaveBeenCalled();
+
+    await user.keyboard('{ArrowDown}');
+    expect(listbox.getAttribute('aria-activedescendant')).toBe(
+      screen.getByRole('option', { name: 'Date' }).id,
+    );
+
+    await user.keyboard('{Enter}');
+    expect(onChange).toHaveBeenCalledWith('date');
+    expect(screen.getByRole('option', { name: /Date/ }).getAttribute('aria-selected')).toBe('true');
+  });
+
+  it('supports Home, End, and Space', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<Listbox label="Fruit" options={options} onChange={onChange} />);
+    await user.tab();
+
+    await user.keyboard('{End}');
+    await user.keyboard(' ');
+    expect(onChange).toHaveBeenLastCalledWith('date');
+
+    await user.keyboard('{Home}');
+    await user.keyboard('{Enter}');
+    expect(onChange).toHaveBeenLastCalledWith('apple');
+  });
+
+  it('does not select a disabled option on click', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<Listbox label="Fruit" options={options} onChange={onChange} />);
+    await user.click(screen.getByRole('option', { name: 'Cherry' }));
+    expect(onChange).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('option', { name: 'Banana' }));
+    expect(onChange).toHaveBeenCalledWith('banana');
+  });
+
+  it('jumps to a matching label with typeahead and resets the buffer after 500ms', () => {
+    vi.useFakeTimers();
+    try {
+      render(<Listbox label="Fruit" options={options} />);
+      const listbox = screen.getByRole('listbox', { name: 'Fruit' });
+      const activeIs = (name: string) =>
+        expect(listbox.getAttribute('aria-activedescendant')).toBe(
+          screen.getByRole('option', { name }).id,
+        );
+      act(() => listbox.focus());
+
+      fireEvent.keyDown(listbox, { key: 'd' });
+      activeIs('Date');
+
+      // Within the window "b" extends the buffer to "db" (no match): active is unchanged.
+      fireEvent.keyDown(listbox, { key: 'b' });
+      activeIs('Date');
+
+      act(() => {
+        vi.advanceTimersByTime(600);
+      });
+      fireEvent.keyDown(listbox, { key: 'b' });
+      activeIs('Banana');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+`;
+
+  return { name: 'Listbox', component, story, test };
+}
+
+export function menuTemplate(): ComponentFiles {
+  const component = `${HEADER}import * as React from 'react';
+import '../styles.css';
+
+export interface MenuItem {
+  id: string;
+  label: string;
+  disabled?: boolean;
+  onSelect: () => void;
+}
+
+export interface MenuProps {
+  /** Accessible name for the menu (the trigger supplies the visible text). */
+  label: string;
+  items: MenuItem[];
+  /**
+   * The trigger element. Must accept a ref and spread props (a DOM element,
+   * or a component like Button/IconButton that forwards both).
+   */
+  children: React.ReactElement;
+}
+
+${OPTION_NAV}
+
+/**
+ * WAI-ARIA APG menu button. Unlike Listbox, DOM focus moves onto the items
+ * themselves (roving focus). Escape closes and returns focus to the trigger;
+ * Tab closes and lets focus continue; activating an item runs its onSelect,
+ * closes the menu, and returns focus to the trigger. The menu is only in the
+ * DOM while open.
+ */
+export function Menu({ label, items, children }: MenuProps) {
+  const base = React.useId();
+  const menuId = base + '-menu';
+  const [open, setOpen] = React.useState(false);
+  const [active, setActive] = React.useState(0);
+  const wrapRef = React.useRef<HTMLSpanElement>(null);
+  const itemRefs = React.useRef<(HTMLButtonElement | null)[]>([]);
+  const buffer = React.useRef('');
+  const timer = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
+  React.useEffect(() => () => clearTimeout(timer.current), []);
+
+  React.useEffect(() => {
+    if (open) itemRefs.current[active]?.focus();
+  }, [open, active]);
+
+  React.useEffect(() => {
+    if (!open) return;
+    const onMouseDown = (event: MouseEvent) => {
+      if (!wrapRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', onMouseDown);
+    return () => document.removeEventListener('mousedown', onMouseDown);
+  }, [open]);
+
+  const focusTrigger = () => {
+    wrapRef.current?.querySelector<HTMLElement>('[aria-haspopup="menu"]')?.focus();
+  };
+
+  const close = (returnFocus: boolean) => {
+    setOpen(false);
+    if (returnFocus) focusTrigger();
+  };
+
+  const openAt = (index: number) => {
+    setActive(index < 0 ? 0 : index);
+    setOpen(true);
+  };
+
+  const trigger = React.cloneElement(children, {
+    'aria-haspopup': 'menu',
+    'aria-expanded': open,
+    'aria-controls': open ? menuId : undefined,
+    onClick: (event: React.MouseEvent) => {
+      children.props.onClick?.(event);
+      if (open) close(false);
+      else openAt(firstEnabled(items));
+    },
+    onKeyDown: (event: React.KeyboardEvent) => {
+      children.props.onKeyDown?.(event);
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        openAt(firstEnabled(items));
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        openAt(lastEnabled(items));
+      }
+    },
+  });
+
+  const handleMenuKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setActive(wrapEnabled(items, active, 1));
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setActive(wrapEnabled(items, active, -1));
+    } else if (event.key === 'Home') {
+      event.preventDefault();
+      setActive(firstEnabled(items));
+    } else if (event.key === 'End') {
+      event.preventDefault();
+      setActive(lastEnabled(items));
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      close(true);
+    } else if (event.key === 'Tab') {
+      close(false);
+    } else if (isTypeaheadKey(event, buffer.current !== '')) {
+      event.preventDefault();
+      buffer.current += event.key.toLowerCase();
+      clearTimeout(timer.current);
+      timer.current = setTimeout(() => {
+        buffer.current = '';
+      }, 500);
+      const match = typeaheadIndex(items, active, buffer.current);
+      if (match >= 0) setActive(match);
+    }
+  };
+
+  return (
+    <span className="ds-menu" ref={wrapRef}>
+      {trigger}
+      {open ? (
+        <ul
+          role="menu"
+          id={menuId}
+          aria-label={label}
+          className="ds-menu__list"
+          onKeyDown={handleMenuKeyDown}
+        >
+          {items.map((item, index) => (
+            <li role="none" key={item.id}>
+              <button
+                type="button"
+                role="menuitem"
+                tabIndex={-1}
+                ref={(el) => {
+                  itemRefs.current[index] = el;
+                }}
+                aria-disabled={item.disabled ? true : undefined}
+                className="ds-menu__item"
+                onClick={() => {
+                  if (item.disabled) return;
+                  item.onSelect();
+                  close(true);
+                }}
+              >
+                {item.label}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+    </span>
+  );
+}
+`;
+
+  const story = `${HEADER}import type { Meta, StoryObj } from '@storybook/react';
+import { Menu } from './Menu';
+import { Button } from '../Button/Button';
+
+const meta = {
+  title: 'Components/Menu',
+  component: Menu,
+  tags: ['autodocs'],
+  args: {
+    label: 'Actions',
+    children: <Button>Actions</Button>,
+    items: [
+      { id: 'rename', label: 'Rename', onSelect: () => {} },
+      { id: 'duplicate', label: 'Duplicate', onSelect: () => {} },
+      { id: 'archive', label: 'Archive', disabled: true, onSelect: () => {} },
+      { id: 'delete', label: 'Delete', onSelect: () => {} },
+    ],
+  },
+} satisfies Meta<typeof Menu>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
+`;
+
+  const test = `${HEADER}import { afterEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { expectNoAxeViolations } from '../testing/axe';
+import { Menu } from './Menu';
+
+afterEach(cleanup);
+
+function setup(onSelect = vi.fn()) {
+  const items = [
+    { id: 'rename', label: 'Rename', onSelect },
+    { id: 'archive', label: 'Archive', disabled: true, onSelect: vi.fn() },
+    { id: 'delete', label: 'Delete', onSelect },
+  ];
+  render(
+    <main>
+      <Menu label="Actions" items={items}>
+        <button type="button">Actions</button>
+      </Menu>
+      <button type="button">After</button>
+    </main>,
+  );
+  return { onSelect, items };
+}
+
+describe('Menu accessibility', () => {
+  it('has no axe violations closed or open', async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <main>
+        <Menu
+          label="Actions"
+          items={[
+            { id: 'rename', label: 'Rename', onSelect: () => {} },
+            { id: 'archive', label: 'Archive', disabled: true, onSelect: () => {} },
+          ]}
+        >
+          <button type="button">Actions</button>
+        </Menu>
+      </main>,
+    );
+    await expectNoAxeViolations(container);
+
+    await user.click(screen.getByRole('button', { name: 'Actions' }));
+    expect(screen.getByRole('menu', { name: 'Actions' })).toBeTruthy();
+    await expectNoAxeViolations(container);
+  });
+});
+
+describe('Menu keyboard behavior', () => {
+  it('opens with Enter, focuses the first item, and moves focus with arrows (skipping disabled, wrapping)', async () => {
+    const user = userEvent.setup();
+    setup();
+    const trigger = screen.getByRole('button', { name: 'Actions' });
+    expect(trigger.getAttribute('aria-haspopup')).toBe('menu');
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+    expect(screen.queryByRole('menu')).toBeNull();
+
+    trigger.focus();
+    await user.keyboard('{Enter}');
+    expect(trigger.getAttribute('aria-expanded')).toBe('true');
+    expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: 'Rename' }));
+
+    await user.keyboard('{ArrowDown}');
+    expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: 'Delete' }));
+    await user.keyboard('{ArrowDown}');
+    expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: 'Rename' }));
+    await user.keyboard('{ArrowUp}');
+    expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: 'Delete' }));
+  });
+
+  it('opens on the last item with ArrowUp from the trigger', async () => {
+    const user = userEvent.setup();
+    setup();
+    screen.getByRole('button', { name: 'Actions' }).focus();
+    await user.keyboard('{ArrowUp}');
+    expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: 'Delete' }));
+  });
+
+  it('closes on Escape and returns focus to the trigger', async () => {
+    const user = userEvent.setup();
+    setup();
+    const trigger = screen.getByRole('button', { name: 'Actions' });
+    trigger.focus();
+    await user.keyboard('{ArrowDown}');
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('menu')).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it('calls onSelect once, closes, and returns focus when an item is activated', async () => {
+    const user = userEvent.setup();
+    const { onSelect } = setup();
+    const trigger = screen.getByRole('button', { name: 'Actions' });
+    trigger.focus();
+    await user.keyboard('{ArrowDown}{ArrowDown}{Enter}');
+    expect(onSelect).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('menu')).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+  });
+
+  it('does not activate a disabled item', async () => {
+    const user = userEvent.setup();
+    const { items } = setup();
+    await user.click(screen.getByRole('button', { name: 'Actions' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Archive' }));
+    expect(items[1].onSelect).not.toHaveBeenCalled();
+    expect(screen.getByRole('menu')).toBeTruthy();
+  });
+
+  it('closes on Tab and on an outside click', async () => {
+    const user = userEvent.setup();
+    setup();
+    const trigger = screen.getByRole('button', { name: 'Actions' });
+    trigger.focus();
+    await user.keyboard('{ArrowDown}');
+    await user.tab();
+    expect(screen.queryByRole('menu')).toBeNull();
+
+    await user.click(trigger);
+    expect(screen.getByRole('menu')).toBeTruthy();
+    await user.click(document.body);
+    expect(screen.queryByRole('menu')).toBeNull();
+  });
+
+  it('jumps to a matching item with typeahead', async () => {
+    const user = userEvent.setup();
+    setup();
+    screen.getByRole('button', { name: 'Actions' }).focus();
+    await user.keyboard('{Enter}');
+    await user.keyboard('d');
+    expect(document.activeElement).toBe(screen.getByRole('menuitem', { name: 'Delete' }));
+  });
+});
+`;
+
+  return { name: 'Menu', component, story, test };
+}
+
+export function comboboxTemplate(): ComponentFiles {
+  const component = `${HEADER}import * as React from 'react';
+import '../styles.css';
+
+export interface ListOption {
+  value: string;
+  label: string;
+  disabled?: boolean;
+}
+
+export interface ComboboxProps {
+  /** Visible label — always rendered and programmatically associated. */
+  label: string;
+  options: ListOption[];
+  value?: string;
+  defaultValue?: string;
+  /** Called with the chosen option's value, or with '' when the selection is cleared. */
+  onChange?: (value: string) => void;
+  /** Optional helper text, linked via aria-describedby. */
+  description?: string;
+  /** Validation message. Sets aria-invalid and is announced politely. */
+  error?: string;
+  required?: boolean;
+  placeholder?: string;
+}
+
+${OPTION_NAV}
+
+/** Case-insensitive: labels starting with the query first, then labels containing it. */
+function filterOptions(options: ListOption[], query: string): ListOption[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return options;
+  const starts = options.filter((o) => o.label.toLowerCase().startsWith(q));
+  const contains = options.filter(
+    (o) => !o.label.toLowerCase().startsWith(q) && o.label.toLowerCase().includes(q),
+  );
+  return [...starts, ...contains];
+}
+
+/**
+ * WAI-ARIA APG combobox with list autocomplete and manual selection. DOM
+ * focus never leaves the input; the active option is exposed via
+ * aria-activedescendant. Typing filters, Arrow keys move the active option,
+ * Enter selects it (and does not submit a surrounding form while the popup is
+ * open), Escape closes the popup and a second Escape clears the field. A
+ * visually-hidden status region announces the result count (WCAG 4.1.3).
+ * Free text is not a value: a selection is required, so on blur the text
+ * reverts to the selected option's label.
+ */
+export function Combobox({
+  label,
+  options,
+  value,
+  defaultValue,
+  onChange,
+  description,
+  error,
+  required,
+  placeholder,
+}: ComboboxProps) {
+  const base = React.useId();
+  const inputId = base + '-input';
+  const listId = base + '-list';
+  const descriptionId = base + '-description';
+  const errorId = base + '-error';
+  const describedBy =
+    [description ? descriptionId : null, error ? errorId : null].filter(Boolean).join(' ') ||
+    undefined;
+
+  const [internal, setInternal] = React.useState(defaultValue);
+  const selectedValue = value ?? internal;
+  const selectedLabel = options.find((o) => o.value === selectedValue)?.label ?? '';
+  const [text, setText] = React.useState(selectedLabel);
+  const [open, setOpen] = React.useState(false);
+  const [filtering, setFiltering] = React.useState(false);
+  const [active, setActive] = React.useState(-1);
+
+  const results = filtering ? filterOptions(options, text) : options;
+  const expanded = open && results.length > 0;
+  const optionId = (index: number) => base + '-option-' + index;
+
+  React.useEffect(() => {
+    setText(selectedLabel);
+  }, [selectedLabel]);
+
+  React.useEffect(() => {
+    if (active < 0) return;
+    document.getElementById(base + '-option-' + active)?.scrollIntoView?.({ block: 'nearest' });
+  }, [active, base]);
+
+  const closePopup = () => {
+    setOpen(false);
+    setFiltering(false);
+    setActive(-1);
+  };
+
+  const commit = (option: ListOption) => {
+    if (option.disabled) return;
+    setText(option.label);
+    if (value === undefined) setInternal(option.value);
+    onChange?.(option.value);
+    closePopup();
+  };
+
+  const openPopup = (initialActive: 'selected' | 'last') => {
+    setOpen(true);
+    if (initialActive === 'last') {
+      setActive(lastEnabled(results));
+      return;
+    }
+    const selectedIndex = results.findIndex((o) => o.value === selectedValue && !o.disabled);
+    setActive(selectedIndex >= 0 ? selectedIndex : firstEnabled(results));
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      if (!expanded) openPopup('selected');
+      else setActive(nextEnabled(results, active, 1));
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      if (!expanded) openPopup('last');
+      else setActive(nextEnabled(results, active, -1));
+    } else if (event.key === 'Enter') {
+      if (open) {
+        event.preventDefault();
+        if (active >= 0 && results[active]) commit(results[active]);
+      }
+    } else if (event.key === 'Escape') {
+      if (open) {
+        event.preventDefault();
+        closePopup();
+      } else if (text !== '') {
+        event.preventDefault();
+        setText('');
+        if (value === undefined) setInternal(undefined);
+        if (selectedValue !== undefined) onChange?.('');
+      }
+    }
+  };
+
+  const status = !open ? '' : results.length === 0
+    ? 'No results'
+    : results.length + (results.length === 1 ? ' result' : ' results') + ' available';
+
+  return (
+    <div className="ds-field ds-combobox">
+      <label className="ds-field__label" htmlFor={inputId}>
+        {label}
+        {required ? <span aria-hidden="true"> *</span> : null}
+      </label>
+      {description ? (
+        <p className="ds-field__description" id={descriptionId}>
+          {description}
+        </p>
+      ) : null}
+      <div className="ds-combobox__control">
+        <input
+          id={inputId}
+          className="ds-input"
+          role="combobox"
+          type="text"
+          autoComplete="off"
+          aria-expanded={expanded}
+          aria-controls={expanded ? listId : undefined}
+          aria-autocomplete="list"
+          aria-activedescendant={expanded && active >= 0 ? optionId(active) : undefined}
+          aria-describedby={describedBy}
+          aria-invalid={error ? true : undefined}
+          required={required}
+          placeholder={placeholder}
+          value={text}
+          onChange={(event) => {
+            setText(event.target.value);
+            setFiltering(true);
+            setOpen(true);
+            setActive(-1);
+          }}
+          onKeyDown={handleKeyDown}
+          onBlur={() => {
+            closePopup();
+            setText(selectedLabel);
+          }}
+        />
+        {expanded ? (
+          <ul
+            role="listbox"
+            id={listId}
+            aria-label={label}
+            className="ds-combobox__list"
+            // Keep DOM focus in the input when the pointer presses an option.
+            onMouseDown={(event) => event.preventDefault()}
+          >
+            {results.map((option, index) => (
+              <li
+                key={option.value}
+                id={optionId(index)}
+                role="option"
+                aria-selected={option.value === selectedValue}
+                aria-disabled={option.disabled ? true : undefined}
+                className={[
+                  'ds-combobox__option',
+                  index === active ? 'ds-combobox__option--active' : null,
+                ]
+                  .filter(Boolean)
+                  .join(' ')}
+                onClick={() => commit(option)}
+              >
+                <span className="ds-combobox__check" aria-hidden="true">
+                  {option.value === selectedValue ? '✓' : ''}
+                </span>
+                {option.label}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+        {open && results.length === 0 ? (
+          <div className="ds-combobox__list ds-combobox__empty" aria-hidden="true">
+            No results
+          </div>
+        ) : null}
+      </div>
+      <div role="status" className="ds-visually-hidden">
+        {status}
+      </div>
+      <p className="ds-field__error" id={errorId} aria-live="polite">
+        {error ?? ''}
+      </p>
+    </div>
+  );
+}
+`;
+
+  const story = `${HEADER}import type { Meta, StoryObj } from '@storybook/react';
+import { Combobox } from './Combobox';
+
+const meta = {
+  title: 'Components/Combobox',
+  component: Combobox,
+  tags: ['autodocs'],
+  args: {
+    label: 'Fruit',
+    options: [
+      { value: 'apple', label: 'Apple' },
+      { value: 'apricot', label: 'Apricot' },
+      { value: 'banana', label: 'Banana' },
+      { value: 'cherry', label: 'Cherry', disabled: true },
+      { value: 'date', label: 'Date' },
+    ],
+  },
+} satisfies Meta<typeof Combobox>;
+
+export default meta;
+type Story = StoryObj<typeof meta>;
+
+export const Default: Story = {};
+export const WithDescription: Story = { args: { description: 'Start typing to filter.' } };
+export const Required: Story = { args: { required: true } };
+export const WithError: Story = { args: { error: 'Choose a fruit from the list.' } };
+export const WithSelection: Story = { args: { defaultValue: 'banana' } };
+`;
+
+  const test = `${HEADER}import { afterEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { expectNoAxeViolations } from '../testing/axe';
+import { Combobox } from './Combobox';
+
+afterEach(cleanup);
+
+const options = [
+  { value: 'apple', label: 'Apple' },
+  { value: 'apricot', label: 'Apricot' },
+  { value: 'banana', label: 'Banana' },
+  { value: 'cherry', label: 'Cherry', disabled: true },
+];
+
+describe('Combobox accessibility', () => {
+  it('has no axe violations closed, open with results, and open with no results', async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <main>
+        <Combobox label="Fruit" options={options} description="Start typing to filter." />
+      </main>,
+    );
+    await expectNoAxeViolations(container);
+
+    const input = screen.getByRole('combobox', { name: /Fruit/ });
+    await user.click(input);
+    await user.keyboard('ap');
+    expect(screen.getByRole('listbox')).toBeTruthy();
+    await expectNoAxeViolations(container);
+
+    await user.keyboard('zzz');
+    expect(screen.queryByRole('listbox')).toBeNull();
+    await expectNoAxeViolations(container);
+  });
+
+  it('has no axe violations in required and error states', async () => {
+    const { container } = render(
+      <main>
+        <Combobox label="Fruit" options={options} required error="Choose a fruit." />
+      </main>,
+    );
+    await expectNoAxeViolations(container);
+  });
+});
+
+describe('Combobox behavior', () => {
+  it('filters as you type, selects with ArrowDown + Enter, and shows the label in the input', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<Combobox label="Fruit" options={options} onChange={onChange} />);
+
+    const input = screen.getByRole('combobox', { name: 'Fruit' }) as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard('ap');
+    expect(screen.getAllByRole('option').map((o) => o.textContent?.replace('✓', ''))).toEqual([
+      'Apple',
+      'Apricot',
+    ]);
+    expect(input.getAttribute('aria-expanded')).toBe('true');
+
+    await user.keyboard('{ArrowDown}{ArrowDown}');
+    expect(input.getAttribute('aria-activedescendant')).toBe(
+      screen.getByRole('option', { name: /Apricot/ }).id,
+    );
+    await user.keyboard('{Enter}');
+    expect(onChange).toHaveBeenCalledWith('apricot');
+    expect(input.value).toBe('Apricot');
+    expect(screen.queryByRole('listbox')).toBeNull();
+    expect(document.activeElement).toBe(input);
+  });
+
+  it('does not select anything on Enter when no option is active', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<Combobox label="Fruit" options={options} onChange={onChange} />);
+    await user.click(screen.getByRole('combobox', { name: 'Fruit' }));
+    await user.keyboard('ban{Enter}');
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('does not submit a surrounding form while the popup is open', async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn((event: React.FormEvent) => event.preventDefault());
+    render(
+      <form onSubmit={onSubmit}>
+        <Combobox label="Fruit" options={options} />
+        <button type="submit">Go</button>
+      </form>,
+    );
+    await user.click(screen.getByRole('combobox', { name: 'Fruit' }));
+    await user.keyboard('ap{ArrowDown}{Enter}');
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it('skips disabled options and cannot select them by click', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<Combobox label="Fruit" options={options} onChange={onChange} />);
+    const input = screen.getByRole('combobox', { name: 'Fruit' });
+    await user.click(input);
+    await user.keyboard('{ArrowDown}');
+    await user.keyboard('{End}');
+    await user.keyboard('{ArrowDown}{ArrowDown}{ArrowDown}{ArrowDown}');
+    expect(input.getAttribute('aria-activedescendant')).toBe(
+      screen.getByRole('option', { name: 'Banana' }).id,
+    );
+    await user.click(screen.getByRole('option', { name: 'Cherry' }));
+    expect(onChange).not.toHaveBeenCalled();
+  });
+
+  it('closes on the first Escape and clears the field on the second', async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(<Combobox label="Fruit" options={options} defaultValue="banana" onChange={onChange} />);
+    const input = screen.getByRole('combobox', { name: 'Fruit' }) as HTMLInputElement;
+    expect(input.value).toBe('Banana');
+
+    await user.click(input);
+    await user.keyboard('{ArrowDown}');
+    expect(screen.getByRole('listbox')).toBeTruthy();
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('listbox')).toBeNull();
+    expect(input.value).toBe('Banana');
+
+    await user.keyboard('{Escape}');
+    expect(input.value).toBe('');
+    expect(onChange).toHaveBeenCalledWith('');
+  });
+
+  it('reverts typed text to the selected label on blur', async () => {
+    const user = userEvent.setup();
+    render(<Combobox label="Fruit" options={options} defaultValue="banana" />);
+    const input = screen.getByRole('combobox', { name: 'Fruit' }) as HTMLInputElement;
+    await user.click(input);
+    await user.keyboard('{Control>}a{/Control}zz');
+    expect(input.value).toBe('zz');
+    await user.tab();
+    expect(input.value).toBe('Banana');
+  });
+
+  it('announces the result count in a status region', async () => {
+    const user = userEvent.setup();
+    render(<Combobox label="Fruit" options={options} />);
+    const status = screen.getByRole('status');
+    expect(status.textContent).toBe('');
+
+    await user.click(screen.getByRole('combobox', { name: 'Fruit' }));
+    await user.keyboard('ap');
+    expect(status.textContent).toBe('2 results available');
+    await user.keyboard('r');
+    expect(status.textContent).toBe('1 result available');
+    await user.keyboard('x');
+    expect(status.textContent).toBe('No results');
+  });
+});
+`;
+
+  return { name: 'Combobox', component, story, test };
+}
+
 export function allTemplates(_tokens: ResolvedTokens): ComponentFiles[] {
   return [
     buttonTemplate(),
@@ -1822,5 +2901,8 @@ export function allTemplates(_tokens: ResolvedTokens): ComponentFiles[] {
     tooltipTemplate(),
     dialogTemplate(),
     toastTemplate(),
+    listboxTemplate(),
+    menuTemplate(),
+    comboboxTemplate(),
   ];
 }

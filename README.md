@@ -126,7 +126,9 @@ generated-ds/
 ```
 
 Components generated today: **Button**, **TextField**, **Badge**, **Alert**,
-**Checkbox**, **Switch**, **RadioGroup**, **Select** — each built on real
+**Checkbox**, **Switch**, **RadioGroup**, **Select**, **Tabs**, **IconButton**,
+**Heading**, **Accordion**, **Tooltip**, **Dialog**, **Toast**, **Listbox**, **Menu**,
+**Combobox** — each built on real
 semantic HTML wherever possible (native checkboxes, radios, and `<select>`)
 so keyboard support, labeling, and state come from the browser instead of
 hand-rolled ARIA: wired labels, `aria-describedby` plumbing,
