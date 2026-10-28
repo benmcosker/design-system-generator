@@ -1,7 +1,13 @@
 import { readFile } from 'node:fs/promises';
 import { extname } from 'node:path';
 import YAML from 'yaml';
-import { tokenSpecSchema, type ResolvedTokens, type Target, type TokenSpec } from './schema.js';
+import {
+  tokenSpecSchema,
+  type ResolvedComputed,
+  type ResolvedTokens,
+  type Target,
+  type TokenSpec,
+} from './schema.js';
 import {
   bestTextOn,
   findContrastIssues,
@@ -62,17 +68,12 @@ export interface ResolveOptions {
   target?: Target;
 }
 
-/**
- * Compute derived tokens and enforce WCAG AA contrast. Throws
- * AccessibilityError when the palette cannot produce accessible
- * components — the generator refuses to emit an inaccessible system.
- *
- * Label colors come from bestTextOn() unless the spec sets an override
- * (colors.onPrimary etc.); either way they are checked against their fill.
- */
-export function resolveTokens(spec: TokenSpec, options: ResolveOptions = {}): ResolvedTokens {
-  const target = options.target ?? 'react';
-  const { colors } = spec;
+/** Derived values and contrast pairs for one mode's palette. */
+function resolveMode(
+  colors: TokenSpec['colors'],
+  focusRingOverride: string | undefined,
+  target: Target,
+): { computed: ResolvedComputed; checks: ContrastCheck[] } {
   const secondary = colors.secondary ?? colors.surface;
   const accent = colors.accent ?? colors.surface;
   const muted = colors.muted ?? colors.surface;
@@ -81,7 +82,7 @@ export function resolveTokens(spec: TokenSpec, options: ResolveOptions = {}): Re
     onDanger: colors.onDanger ?? bestTextOn(colors.danger),
     onSuccess: colors.onSuccess ?? bestTextOn(colors.success),
     onWarning: colors.onWarning ?? bestTextOn(colors.warning),
-    focusRingColor: spec.focus.ringColor ?? colors.primary,
+    focusRingColor: focusRingOverride ?? colors.primary,
     onSecondary: colors.onSecondary ?? bestTextOn(secondary),
     onAccent: colors.onAccent ?? bestTextOn(accent),
     onMuted: bestTextOn(muted),
@@ -132,10 +133,38 @@ export function resolveTokens(spec: TokenSpec, options: ResolveOptions = {}): Re
     );
   }
 
+  return { computed, checks };
+}
+
+/**
+ * Compute derived tokens and enforce WCAG AA contrast. Throws
+ * AccessibilityError when the palette cannot produce accessible
+ * components — the generator refuses to emit an inaccessible system.
+ *
+ * Label colors come from bestTextOn() unless the spec sets an override
+ * (colors.onPrimary etc.); either way they are checked against their fill.
+ * Every mode in `modes` is checked with the same pairs and thresholds as the
+ * default palette (dark pairs are prefixed `[dark]`), all in one pass.
+ */
+export function resolveTokens(spec: TokenSpec, options: ResolveOptions = {}): ResolvedTokens {
+  const target = options.target ?? 'react';
+  const { modes, ...rest } = spec;
+  const light = resolveMode(spec.colors, spec.focus.ringColor, target);
+  const checks = [...light.checks];
+
+  let resolvedModes: ResolvedTokens['modes'];
+  if (modes?.dark) {
+    const dark = resolveMode(modes.dark.colors, modes.dark.focusRingColor, target);
+    checks.push(...dark.checks.map((c) => ({ ...c, pair: `[dark] ${c.pair}` })));
+    resolvedModes = { dark: { colors: modes.dark.colors, computed: dark.computed } };
+  }
+
   const issues = findContrastIssues(checks);
   if (issues.length > 0) {
     throw new AccessibilityError(issues);
   }
 
-  return { ...spec, computed };
+  return resolvedModes
+    ? { ...rest, computed: light.computed, modes: resolvedModes }
+    : { ...rest, computed: light.computed };
 }

@@ -72,7 +72,7 @@ export async function generate(
   await write('vitest.config.ts', renderVitestConfig());
   await write('README.md', renderGeneratedReadme(tokens, components));
   await write('.storybook/main.ts', renderStorybookMain());
-  await write('.storybook/preview.ts', renderStorybookPreview());
+  await write('.storybook/preview.ts', renderStorybookPreview(tokens));
   await write('.github/workflows/contrast.yml', renderContrastWorkflow());
   await write('tokens.yaml', renderTokenSpecYaml(tokens));
   await write('src/tokens.css', renderTokensCss(tokens));
@@ -81,7 +81,10 @@ export async function generate(
   await write('src/testing/axe.ts', renderAxeHelper());
 
   for (const component of components) {
-    await write(`src/${component.name}/${component.name}.tsx`, component.component);
+    await write(
+      `src/${component.name}/${component.name}.tsx`,
+      component.client ? `'use client';\n${component.component}` : component.component,
+    );
     await write(`src/${component.name}/${component.name}.stories.tsx`, component.story);
     await write(`src/${component.name}/${component.name}.test.tsx`, component.test);
     await write(

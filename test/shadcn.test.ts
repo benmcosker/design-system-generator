@@ -189,7 +189,9 @@ describe('label-color overrides', () => {
 
 describe('shadcn emitter', () => {
   it('emits every mapped variable exactly once, plus the Tailwind bridge', async () => {
-    const tokens = resolveTokens(await parseTokenFile(examplePath), { target: 'shadcn' });
+    // Light-only: the example also defines dark, which repeats every name in `.dark`.
+    const { modes: _modes, ...lightOnly } = await parseTokenFile(examplePath);
+    const tokens = resolveTokens(lightOnly, { target: 'shadcn' });
     const css = renderShadcnThemeCss(tokens, { source: 'tokens.yaml' });
     for (const [name, value] of shadcnRootVars(tokens)) {
       const matches = css.match(new RegExp(`^  --${name}: `, 'gm')) ?? [];
@@ -198,7 +200,7 @@ describe('shadcn emitter', () => {
     }
     expect(css).toContain('@theme inline {');
     expect(css).toContain('--color-primary-foreground: var(--primary-foreground);');
-    expect(css).toContain('--radius-md: 8px;');
+    expect(css).toContain('--radius-md: 0.5rem;');
     expect(css).toContain('--font-sans: ');
     expect(css).toMatchSnapshot();
   });
@@ -277,6 +279,16 @@ describe('CLI: generate --target shadcn and check --theme', () => {
     expect(result.stderr).toContain('Theme file has drifted from tokens');
   });
 
+  it('fails the drift check when a .dark value is edited by hand', () => {
+    const edited = join(dir, 'edited-dark.css');
+    const css = readFileSync(join(dir, 'out', 'theme.css'), 'utf8');
+    expect(css).toContain('.dark {');
+    writeFileSync(edited, css.replace('--background: #0b1220;', '--background: #000000;'));
+    const result = run('check', tokensPath, '--theme', edited);
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('+  --background: #000000;');
+  });
+
   it('reports a contrast failure, not a diff, when the tokens themselves fail', () => {
     const bad = join(dir, 'bad.yaml');
     writeFileSync(bad, readFileSync(examplePath, 'utf8').replace('"#475569"', '"#cbd5e1"'));
@@ -290,5 +302,53 @@ describe('CLI: generate --target shadcn and check --theme', () => {
     const result = run('generate', tokensPath, '--target', 'shadcn', '--ai-docs', '-o', join(dir, 'x'));
     expect(result.status).toBe(1);
     expect(result.stderr).toContain('not supported with --target shadcn');
+  });
+});
+
+describe('shadcn dark mode', () => {
+  const darkSpec = {
+    ...lightSpec,
+    modes: {
+      dark: {
+        colors: {
+          primary: '#60a5fa',
+          background: '#0b1220',
+          surface: '#111a2e',
+          text: '#e5e7eb',
+          textMuted: '#a3b0c4',
+          danger: '#f87171',
+          success: '#4ade80',
+          warning: '#fbbf24',
+        },
+      },
+    },
+  };
+  const tokens = resolveTokens(parseTokens(darkSpec), { target: 'shadcn' });
+
+  it('emits a .dark block and the Tailwind v4 custom variant', () => {
+    const css = renderShadcnThemeCss(tokens);
+    expect(css).toContain('@custom-variant dark (&:is(.dark *));');
+    expect(css).toMatch(/\.dark \{[^}]*--background: #0b1220;/);
+    expect(css).not.toMatch(/\.dark \{[^}]*--radius:/);
+  });
+
+  it('adds cssVars.dark to the registry item', () => {
+    const item = JSON.parse(renderShadcnRegistryItem(tokens));
+    expect(item.cssVars.dark.background).toBe('#0b1220');
+  });
+
+  it('emits no dark artifacts without modes', () => {
+    const css = renderShadcnThemeCss(resolveTokens(parseTokens(lightSpec), { target: 'shadcn' }));
+    expect(css).not.toContain('.dark');
+    expect(css).not.toContain('@custom-variant');
+    expect(JSON.parse(renderShadcnRegistryItem(resolveTokens(parseTokens(lightSpec)))).cssVars).not.toHaveProperty('dark');
+  });
+
+  it('runs the shadcn-only pairs on the dark palette', () => {
+    const bad = {
+      ...darkSpec,
+      modes: { dark: { colors: { ...darkSpec.modes.dark.colors, textMuted: '#1f2937' } } },
+    };
+    expect(() => resolveTokens(parseTokens(bad), { target: 'shadcn' })).toThrowError(/\[dark\] muted text on surface/);
   });
 });

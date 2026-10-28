@@ -73,6 +73,39 @@ Overrides are contrast-checked like computed labels. They're useful for saturate
 brand colors: `#ff0000` fails with the computed `#111827` label (4.44:1) but passes
 with `onPrimary: "#000000"` (5.25:1).
 
+### Dark mode
+
+Add a `modes.dark` palette with the same color keys as `colors` (the eight required
+colors are required; optional slots default from the dark values):
+
+```yaml
+modes:
+  dark:
+    colors:
+      primary: "#60a5fa"
+      background: "#0b1220"
+      surface: "#111a2e"
+      text: "#e5e7eb"
+      textMuted: "#a3b0c4"
+      danger: "#f87171"
+      success: "#4ade80"
+      warning: "#fbbf24"
+    focusRingColor: "#60a5fa"   # optional, defaults to the dark primary
+```
+
+The dark palette goes through the same WCAG AA checks as the light one, in one pass;
+failures are reported with a `[dark]` prefix. **You supply the palette; the generator
+only validates it.** Without `modes`, output is unchanged.
+
+- **React target:** `tokens.css` applies dark values under `prefers-color-scheme: dark`
+  and forces them with `data-theme="dark"` on `<html>` (`data-theme="light"` forces light).
+- **shadcn target:** `theme.css` gains a `.dark { … }` block and the Tailwind v4
+  `@custom-variant dark` line; the registry item gains `cssVars.dark`.
+
+Dark-mode contrast is enforced at the token level. jsdom can't resolve the CSS variables
+reliably, so the real-browser backstop is the Storybook a11y addon, which runs under the
+dark theme.
+
 ### What happens with an inaccessible palette?
 
 Generation refuses to proceed and tells you exactly why. Take this spec —

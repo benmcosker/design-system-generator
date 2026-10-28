@@ -1,5 +1,5 @@
 import type { ResolvedTokens } from '../tokens/schema.js';
-import { fontSizeLadder, remFromPx } from './css.js';
+import { fontSizeLadder, radiusToRem, remFromPx } from './css.js';
 
 /**
  * The shadcn/ui target: a Tailwind v4 theme generated from the token spec.
@@ -13,9 +13,13 @@ export interface ShadcnRenderOptions {
 }
 
 /** shadcn variable name (without `--`) → value, in emission order. */
-export function shadcnRootVars(tokens: ResolvedTokens): Array<[string, string]> {
-  const { colors, radius, computed } = tokens;
-  return [
+export function shadcnRootVars(
+  tokens: ResolvedTokens,
+  mode: 'light' | 'dark' = 'light',
+): Array<[string, string]> {
+  const { radius } = tokens;
+  const { colors, computed } = mode === 'dark' && tokens.modes ? tokens.modes.dark : tokens;
+  const vars: Array<[string, string]> = [
     ['background', colors.background],
     ['foreground', colors.text],
     ['card', colors.surface],
@@ -39,7 +43,7 @@ export function shadcnRootVars(tokens: ResolvedTokens): Array<[string, string]> 
     ['border', computed.border],
     ['input', computed.input],
     ['ring', computed.focusRingColor],
-    ['radius', radius.md],
+    ['radius', radiusToRem(radius.md)],
     ...computed.chart.map((color, i): [string, string] => [`chart-${i + 1}`, color]),
     ['sidebar', colors.surface],
     ['sidebar-foreground', colors.text],
@@ -50,6 +54,8 @@ export function shadcnRootVars(tokens: ResolvedTokens): Array<[string, string]> 
     ['sidebar-border', computed.border],
     ['sidebar-ring', computed.focusRingColor],
   ];
+  // Radius isn't themable per mode; shadcn's `.dark` block carries colors only.
+  return mode === 'dark' ? vars.filter(([name]) => name !== 'radius') : vars;
 }
 
 /** Tailwind v4 `@theme inline` entries (without `--`) → value. */
@@ -61,15 +67,15 @@ export function shadcnThemeVars(tokens: ResolvedTokens): Array<[string, string]>
     .map((name): [string, string] => [`color-${name}`, `var(--${name})`]);
   return [
     ...colorVars,
-    ['radius-sm', radius.sm],
-    ['radius-md', radius.md],
-    ['radius-lg', radius.lg],
+    ['radius-sm', radiusToRem(radius.sm)],
+    ['radius-md', radiusToRem(radius.md)],
+    ['radius-lg', radiusToRem(radius.lg)],
     ['font-sans', typography.fontFamily],
     ...fontSizeLadder(typography).map(([label, px]): [string, string] => [
       `text-${label}`,
       remFromPx(px),
     ]),
-    ['spacing', `${spacing.unitPx}px`],
+    ['spacing', remFromPx(spacing.unitPx)],
   ];
 }
 
@@ -88,11 +94,18 @@ export function renderShadcnThemeCss(tokens: ResolvedTokens, options: ShadcnRend
   const theme = shadcnThemeVars(tokens)
     .map(([name, value]) => `  --${name}: ${value};`)
     .join('\n');
+  const dark = tokens.modes?.dark
+    ? shadcnRootVars(tokens, 'dark')
+        .map(([name, value]) => `  --${name}: ${value};`)
+        .join('\n')
+    : undefined;
+  const customVariant = dark ? '\n@custom-variant dark (&:is(.dark *));\n\n' : '';
+  const darkBlock = dark ? `\n.dark {\n${dark}\n}\n` : '';
   return `${shadcnThemeHeader(options)}
-:root {
+${customVariant}:root {
 ${root}
 }
-
+${darkBlock}
 @theme inline {
 ${theme}
 }
@@ -118,6 +131,7 @@ export function renderShadcnRegistryItem(tokens: ResolvedTokens): string {
     cssVars: {
       theme: Object.fromEntries(shadcnThemeVars(tokens)),
       light: Object.fromEntries(shadcnRootVars(tokens)),
+      ...(tokens.modes?.dark ? { dark: Object.fromEntries(shadcnRootVars(tokens, 'dark')) } : {}),
     },
   };
   return JSON.stringify(item, null, 2) + '\n';

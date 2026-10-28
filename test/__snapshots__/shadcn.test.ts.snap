@@ -27,7 +27,7 @@ exports[`shadcn emitter > emits every mapped variable exactly once, plus the Tai
   --border: #dbdcdf;
   --input: #91949d;
   --ring: #1d4ed8;
-  --radius: 8px;
+  --radius: 0.5rem;
   --chart-1: #1d4ed8;
   --chart-2: #15803d;
   --chart-3: #b45309;
@@ -80,9 +80,9 @@ exports[`shadcn emitter > emits every mapped variable exactly once, plus the Tai
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 16px;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
   --font-sans: 'Inter', system-ui, sans-serif;
   --text-sm: 0.8125rem;
   --text-base: 1rem;
@@ -90,7 +90,7 @@ exports[`shadcn emitter > emits every mapped variable exactly once, plus the Tai
   --text-xl: 1.5625rem;
   --text-2xl: 1.9375rem;
   --text-3xl: 2.4375rem;
-  --spacing: 4px;
+  --spacing: 0.25rem;
 }
 "
 `;
