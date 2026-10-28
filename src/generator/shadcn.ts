@@ -1,5 +1,5 @@
 import type { ResolvedTokens } from '../tokens/schema.js';
-import { fontSizeLadder, remFromPx } from './css.js';
+import { fontSizeLadder, radiusToRem, remFromPx } from './css.js';
 
 /**
  * The shadcn/ui target: a Tailwind v4 theme generated from the token spec.
@@ -39,7 +39,7 @@ export function shadcnRootVars(tokens: ResolvedTokens): Array<[string, string]> 
     ['border', computed.border],
     ['input', computed.input],
     ['ring', computed.focusRingColor],
-    ['radius', radius.md],
+    ['radius', radiusToRem(radius.md)],
     ...computed.chart.map((color, i): [string, string] => [`chart-${i + 1}`, color]),
     ['sidebar', colors.surface],
     ['sidebar-foreground', colors.text],
@@ -61,15 +61,15 @@ export function shadcnThemeVars(tokens: ResolvedTokens): Array<[string, string]>
     .map((name): [string, string] => [`color-${name}`, `var(--${name})`]);
   return [
     ...colorVars,
-    ['radius-sm', radius.sm],
-    ['radius-md', radius.md],
-    ['radius-lg', radius.lg],
+    ['radius-sm', radiusToRem(radius.sm)],
+    ['radius-md', radiusToRem(radius.md)],
+    ['radius-lg', radiusToRem(radius.lg)],
     ['font-sans', typography.fontFamily],
     ...fontSizeLadder(typography).map(([label, px]): [string, string] => [
       `text-${label}`,
       remFromPx(px),
     ]),
-    ['spacing', `${spacing.unitPx}px`],
+    ['spacing', remFromPx(spacing.unitPx)],
   ];
 }
 

@@ -198,7 +198,7 @@ describe('shadcn emitter', () => {
     }
     expect(css).toContain('@theme inline {');
     expect(css).toContain('--color-primary-foreground: var(--primary-foreground);');
-    expect(css).toContain('--radius-md: 8px;');
+    expect(css).toContain('--radius-md: 0.5rem;');
     expect(css).toContain('--font-sans: ');
     expect(css).toMatchSnapshot();
   });

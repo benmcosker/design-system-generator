@@ -144,3 +144,34 @@ describe('line-height', () => {
     expect(stylesCss).toMatch(/\.ds-heading \{[^}]*line-height: var\(--ds-line-height-tight\)/);
   });
 });
+
+// Workstream D (v2.9.0) — rem spacing and radius (WCAG 1.4.4).
+describe('rem spacing and radius', () => {
+  it('emits spacing and px radii in rem', () => {
+    expect(tokensCss).toContain('--ds-space-1: 0.25rem;');
+    expect(tokensCss).toContain('--ds-space-8: 2rem;');
+    expect(tokensCss).not.toMatch(/--ds-space-\d+: \d+px;/);
+    expect(tokensCss).not.toMatch(/--ds-radius-\w+: \d+px;/);
+  });
+
+  it('keeps spacing relative to the 16px root, not baseSizePx', () => {
+    const css = renderTokensCss(
+      resolveTokens(parseTokens({ ...spec, typography: { baseSizePx: 18 } })),
+    );
+    expect(css).toContain('--ds-space-4: 1rem;');
+  });
+
+  it('passes non-px radii through verbatim', () => {
+    const css = renderTokensCss(
+      resolveTokens(parseTokens({ ...spec, radius: { sm: '50%', md: '0.5rem', lg: '12px' } })),
+    );
+    expect(css).toContain('--ds-radius-sm: 50%;');
+    expect(css).toContain('--ds-radius-md: 0.5rem;');
+    expect(css).toContain('--ds-radius-lg: 0.75rem;');
+  });
+
+  it('keeps focus ring width and touch-target minimums in px', () => {
+    expect(tokensCss).toMatch(/--ds-focus-ring-width: \d+px;/);
+    expect(stylesCss).toContain('24px');
+  });
+});
