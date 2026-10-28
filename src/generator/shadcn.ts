@@ -13,9 +13,13 @@ export interface ShadcnRenderOptions {
 }
 
 /** shadcn variable name (without `--`) → value, in emission order. */
-export function shadcnRootVars(tokens: ResolvedTokens): Array<[string, string]> {
-  const { colors, radius, computed } = tokens;
-  return [
+export function shadcnRootVars(
+  tokens: ResolvedTokens,
+  mode: 'light' | 'dark' = 'light',
+): Array<[string, string]> {
+  const { radius } = tokens;
+  const { colors, computed } = mode === 'dark' && tokens.modes ? tokens.modes.dark : tokens;
+  const vars: Array<[string, string]> = [
     ['background', colors.background],
     ['foreground', colors.text],
     ['card', colors.surface],
@@ -50,6 +54,8 @@ export function shadcnRootVars(tokens: ResolvedTokens): Array<[string, string]> 
     ['sidebar-border', computed.border],
     ['sidebar-ring', computed.focusRingColor],
   ];
+  // Radius isn't themable per mode; shadcn's `.dark` block carries colors only.
+  return mode === 'dark' ? vars.filter(([name]) => name !== 'radius') : vars;
 }
 
 /** Tailwind v4 `@theme inline` entries (without `--`) → value. */
@@ -88,11 +94,18 @@ export function renderShadcnThemeCss(tokens: ResolvedTokens, options: ShadcnRend
   const theme = shadcnThemeVars(tokens)
     .map(([name, value]) => `  --${name}: ${value};`)
     .join('\n');
+  const dark = tokens.modes?.dark
+    ? shadcnRootVars(tokens, 'dark')
+        .map(([name, value]) => `  --${name}: ${value};`)
+        .join('\n')
+    : undefined;
+  const customVariant = dark ? '\n@custom-variant dark (&:is(.dark *));\n\n' : '';
+  const darkBlock = dark ? `\n.dark {\n${dark}\n}\n` : '';
   return `${shadcnThemeHeader(options)}
-:root {
+${customVariant}:root {
 ${root}
 }
-
+${darkBlock}
 @theme inline {
 ${theme}
 }
@@ -118,6 +131,7 @@ export function renderShadcnRegistryItem(tokens: ResolvedTokens): string {
     cssVars: {
       theme: Object.fromEntries(shadcnThemeVars(tokens)),
       light: Object.fromEntries(shadcnRootVars(tokens)),
+      ...(tokens.modes?.dark ? { dark: Object.fromEntries(shadcnRootVars(tokens, 'dark')) } : {}),
     },
   };
   return JSON.stringify(item, null, 2) + '\n';

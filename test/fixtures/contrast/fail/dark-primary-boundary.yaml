@@ -1,0 +1,21 @@
+name: acme
+colors:
+  primary: "#1d4ed8"
+  background: "#ffffff"
+  surface: "#f8fafc"
+  text: "#0f172a"
+  textMuted: "#475569"
+  danger: "#b91c1c"
+  success: "#15803d"
+  warning: "#b45309"
+modes:
+  dark:
+    colors:
+      primary: "#1e3a8a"
+      background: "#0b1220"
+      surface: "#111a2e"
+      text: "#e5e7eb"
+      textMuted: "#a3b0c4"
+      danger: "#f87171"
+      success: "#4ade80"
+      warning: "#fbbf24"

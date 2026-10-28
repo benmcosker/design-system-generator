@@ -4,18 +4,8 @@ const hexColor = z
   .string()
   .regex(/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/, 'must be a hex color like #2563eb');
 
-/**
- * The design-token spec a user hands to the generator (JSON or YAML).
- * Everything optional has a sensible default so a minimal spec still
- * produces a complete design system.
- */
-export const tokenSpecSchema = z.object({
-  /** Machine name for the generated package, e.g. "acme" -> acme-design-system */
-  name: z
-    .string()
-    .min(1)
-    .regex(/^[a-z][a-z0-9-]*$/, 'must be lowercase kebab-case'),
-  colors: z.object({
+/** One mode's palette. Shared by `colors` and `modes.dark.colors` so they can't drift. */
+const colorsSchema = z.object({
     primary: hexColor,
     background: hexColor,
     surface: hexColor,
@@ -40,7 +30,20 @@ export const tokenSpecSchema = z.object({
     onWarning: hexColor.optional(),
     onSecondary: hexColor.optional(),
     onAccent: hexColor.optional(),
-  }),
+});
+
+/**
+ * The design-token spec a user hands to the generator (JSON or YAML).
+ * Everything optional has a sensible default so a minimal spec still
+ * produces a complete design system.
+ */
+export const tokenSpecSchema = z.object({
+  /** Machine name for the generated package, e.g. "acme" -> acme-design-system */
+  name: z
+    .string()
+    .min(1)
+    .regex(/^[a-z][a-z0-9-]*$/, 'must be lowercase kebab-case'),
+  colors: colorsSchema,
   typography: z
     .object({
       fontFamily: z
@@ -71,6 +74,16 @@ export const tokenSpecSchema = z.object({
       ringColor: hexColor.optional(),
     })
     .default({}),
+  /** Optional alternate palettes. Validated by the same contrast gate as `colors`. */
+  modes: z
+    .object({
+      dark: z.object({
+        colors: colorsSchema,
+        /** Defaults to the dark `primary` when omitted */
+        focusRingColor: hexColor.optional(),
+      }),
+    })
+    .optional(),
 });
 
 export type TokenSpec = z.infer<typeof tokenSpecSchema>;
@@ -82,22 +95,33 @@ export type Target = 'react' | 'shadcn';
  * Token spec plus values the generator computes: readable foreground
  * colors for each filled surface, and the resolved focus-ring color.
  */
-export interface ResolvedTokens extends TokenSpec {
-  computed: {
-    onPrimary: string;
-    onDanger: string;
-    onSuccess: string;
-    onWarning: string;
-    focusRingColor: string;
-    onSecondary: string;
-    onAccent: string;
-    onMuted: string;
-    /** Optional palette slots, resolved to their defaults when not set. */
-    secondary: string;
-    accent: string;
-    muted: string;
-    border: string;
-    input: string;
-    chart: string[];
-  };
+export interface ResolvedComputed {
+  onPrimary: string;
+  onDanger: string;
+  onSuccess: string;
+  onWarning: string;
+  focusRingColor: string;
+  onSecondary: string;
+  onAccent: string;
+  onMuted: string;
+  /** Optional palette slots, resolved to their defaults when not set. */
+  secondary: string;
+  accent: string;
+  muted: string;
+  border: string;
+  input: string;
+  chart: string[];
+}
+
+/** A non-default mode after resolution (colors plus derived values). */
+export interface ResolvedMode {
+  colors: TokenSpec['colors'];
+  computed: ResolvedComputed;
+}
+
+export interface ResolvedTokens extends Omit<TokenSpec, 'modes'> {
+  /** Light (default) mode's derived values. */
+  computed: ResolvedComputed;
+  /** Present only when the spec defines `modes`. */
+  modes?: { dark: ResolvedMode };
 }

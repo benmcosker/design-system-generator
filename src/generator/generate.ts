@@ -72,7 +72,7 @@ export async function generate(
   await write('vitest.config.ts', renderVitestConfig());
   await write('README.md', renderGeneratedReadme(tokens, components));
   await write('.storybook/main.ts', renderStorybookMain());
-  await write('.storybook/preview.ts', renderStorybookPreview());
+  await write('.storybook/preview.ts', renderStorybookPreview(tokens));
   await write('.github/workflows/contrast.yml', renderContrastWorkflow());
   await write('tokens.yaml', renderTokenSpecYaml(tokens));
   await write('src/tokens.css', renderTokensCss(tokens));
