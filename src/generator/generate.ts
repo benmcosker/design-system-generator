@@ -81,7 +81,10 @@ export async function generate(
   await write('src/testing/axe.ts', renderAxeHelper());
 
   for (const component of components) {
-    await write(`src/${component.name}/${component.name}.tsx`, component.component);
+    await write(
+      `src/${component.name}/${component.name}.tsx`,
+      component.client ? `'use client';\n${component.component}` : component.component,
+    );
     await write(`src/${component.name}/${component.name}.stories.tsx`, component.story);
     await write(`src/${component.name}/${component.name}.test.tsx`, component.test);
     await write(
