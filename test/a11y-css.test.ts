@@ -126,3 +126,21 @@ describe('listbox, menu and combobox styles', () => {
     expect(stylesCss.slice(start, end)).not.toContain('transition');
   });
 });
+
+// Workstream C (v2.9.0) — scalable line-height (WCAG 1.4.12).
+describe('line-height', () => {
+  it('emits unitless line-height tokens', () => {
+    expect(tokensCss).toContain('--ds-line-height: 1.5;');
+    expect(tokensCss).toContain('--ds-line-height-tight: 1.25;');
+  });
+
+  it('sets line-height in every rule that sets font-family', () => {
+    const blocks = stylesCss.split('}').filter((b) => b.includes('font-family'));
+    expect(blocks.length).toBeGreaterThan(0);
+    for (const block of blocks) expect(block).toContain('line-height: var(--ds-line-height');
+  });
+
+  it('uses the tight token for headings', () => {
+    expect(stylesCss).toMatch(/\.ds-heading \{[^}]*line-height: var\(--ds-line-height-tight\)/);
+  });
+});

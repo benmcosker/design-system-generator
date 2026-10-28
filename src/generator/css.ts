@@ -47,6 +47,8 @@ export function renderTokensCss(tokens: ResolvedTokens): string {
   --ds-color-on-warning: ${computed.onWarning};
 
   --ds-font-family: ${typography.fontFamily};
+  --ds-line-height: ${typography.lineHeight};
+  --ds-line-height-tight: ${typography.lineHeightTight};
 ${fontSizes}
 
 ${spaces}
@@ -72,6 +74,7 @@ export function renderStylesCss(): string {
   justify-content: center;
   gap: var(--ds-space-2);
   font-family: var(--ds-font-family);
+  line-height: var(--ds-line-height);
   font-size: var(--ds-font-size-base);
   font-weight: 600;
   border: 2px solid transparent;
@@ -142,6 +145,7 @@ export function renderStylesCss(): string {
   flex-direction: column;
   gap: var(--ds-space-1);
   font-family: var(--ds-font-family);
+  line-height: var(--ds-line-height);
   max-width: 40ch;
 }
 .ds-field__label {
@@ -160,6 +164,7 @@ export function renderStylesCss(): string {
 }
 .ds-input {
   font-family: var(--ds-font-family);
+  line-height: var(--ds-line-height);
   font-size: var(--ds-font-size-base);
   color: var(--ds-color-text);
   background: var(--ds-color-background);
@@ -173,6 +178,7 @@ export function renderStylesCss(): string {
 }
 .ds-select {
   font-family: var(--ds-font-family);
+  line-height: var(--ds-line-height);
   font-size: var(--ds-font-size-base);
   color: var(--ds-color-text);
   background: var(--ds-color-background);
@@ -188,6 +194,7 @@ export function renderStylesCss(): string {
 .ds-badge {
   display: inline-block;
   font-family: var(--ds-font-family);
+  line-height: var(--ds-line-height);
   font-size: var(--ds-font-size-sm);
   font-weight: 600;
   padding: var(--ds-space-1) var(--ds-space-2);
@@ -214,6 +221,7 @@ export function renderStylesCss(): string {
   display: flex;
   gap: var(--ds-space-3);
   font-family: var(--ds-font-family);
+  line-height: var(--ds-line-height);
   font-size: var(--ds-font-size-base);
   color: var(--ds-color-text);
   background: var(--ds-color-surface);
@@ -254,6 +262,7 @@ export function renderStylesCss(): string {
   grid-template-columns: auto 1fr;
   column-gap: var(--ds-space-2);
   font-family: var(--ds-font-family);
+  line-height: var(--ds-line-height);
   max-width: 40ch;
 }
 .ds-checkbox__input {
@@ -279,6 +288,7 @@ export function renderStylesCss(): string {
   align-items: center;
   column-gap: var(--ds-space-2);
   font-family: var(--ds-font-family);
+  line-height: var(--ds-line-height);
   max-width: 40ch;
 }
 .ds-switch__input {
@@ -330,6 +340,7 @@ export function renderStylesCss(): string {
   flex-direction: column;
   gap: var(--ds-space-2);
   font-family: var(--ds-font-family);
+  line-height: var(--ds-line-height);
   border: none;
   padding: 0;
   margin: 0;
@@ -356,6 +367,7 @@ export function renderStylesCss(): string {
 
 .ds-tabs {
   font-family: var(--ds-font-family);
+  line-height: var(--ds-line-height);
 }
 .ds-tabs__list {
   display: flex;
@@ -371,6 +383,7 @@ export function renderStylesCss(): string {
   padding: var(--ds-space-2) var(--ds-space-3);
   min-block-size: 24px;
   font-family: var(--ds-font-family);
+  line-height: var(--ds-line-height);
   font-size: var(--ds-font-size-base);
   font-weight: 600;
   color: var(--ds-color-text-muted);
@@ -387,6 +400,7 @@ export function renderStylesCss(): string {
 
 .ds-heading {
   font-family: var(--ds-font-family);
+  line-height: var(--ds-line-height-tight);
   font-weight: 700;
   color: var(--ds-color-text);
   margin: 0;
@@ -412,6 +426,7 @@ export function renderStylesCss(): string {
 
 .ds-accordion {
   font-family: var(--ds-font-family);
+  line-height: var(--ds-line-height);
   color: var(--ds-color-text);
 }
 .ds-accordion__item {
@@ -448,6 +463,7 @@ export function renderStylesCss(): string {
   left: 50%;
   transform: translateX(-50%);
   font-family: var(--ds-font-family);
+  line-height: var(--ds-line-height);
   font-size: var(--ds-font-size-sm);
   color: var(--ds-color-background);
   background: var(--ds-color-text);
@@ -481,6 +497,7 @@ export function renderStylesCss(): string {
   width: calc(100% - var(--ds-space-8));
   max-width: 32rem;
   font-family: var(--ds-font-family);
+  line-height: var(--ds-line-height);
   color: var(--ds-color-text);
   background: var(--ds-color-surface);
 }
@@ -514,6 +531,7 @@ export function renderStylesCss(): string {
   min-width: 16rem;
   max-width: 24rem;
   font-family: var(--ds-font-family);
+  line-height: var(--ds-line-height);
   font-size: var(--ds-font-size-base);
   color: var(--ds-color-text);
   background: var(--ds-color-background);
@@ -558,6 +576,7 @@ export function renderStylesCss(): string {
   max-height: 16rem;
   overflow-y: auto;
   font-family: var(--ds-font-family);
+  line-height: var(--ds-line-height);
   font-size: var(--ds-font-size-base);
   color: var(--ds-color-text);
   background: var(--ds-color-background);
@@ -610,6 +629,7 @@ export function renderStylesCss(): string {
   padding: var(--ds-space-1);
   list-style: none;
   font-family: var(--ds-font-family);
+  line-height: var(--ds-line-height);
   font-size: var(--ds-font-size-base);
   color: var(--ds-color-text);
   background: var(--ds-color-background);

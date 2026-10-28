@@ -48,6 +48,8 @@ export const tokenSpecSchema = z.object({
         .default("system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif"),
       baseSizePx: z.number().int().min(12).default(16),
       scale: z.number().min(1).max(2).default(1.25),
+      lineHeight: z.number().min(1.2).max(2).default(1.5),
+      lineHeightTight: z.number().min(1.2).max(2).default(1.25),
     })
     .default({}),
   spacing: z
